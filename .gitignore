@@ -1,6 +1,4 @@
 /build/*
-/src/drivers/**/technologies.json
-/src/drivers/**/wappalyzer.js
 /src/drivers/webextension/images/icons/converted/*
 
 node_modules
