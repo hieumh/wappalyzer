@@ -1,56 +1,67 @@
 #!/usr/bin/env node
 
 const Wappalyzer = require('./driver')
-
-const args = process.argv.slice(2)
-
-const options = {}
-
-let url
+const createReport = require('./lib')
 let arg
 
-const aliases = {
-  a: 'userAgent',
-  b: 'batchSize',
-  d: 'debug',
-  t: 'delay',
-  h: 'help',
-  D: 'maxDepth',
-  m: 'maxUrls',
-  P: 'pretty',
-  r: 'recursive',
-  w: 'maxWait',
+
+
+function commandAnalyzed(url,_options=[]) {
+
+
+    const args = _options.slice(2)
+    const options = {}
+
+
+
+    const aliases = {
+        a: 'userAgent',
+        b: 'batchSize',
+        d: 'debug',
+        t: 'delay',
+        h: 'help',
+        D: 'maxDepth',
+        m: 'maxUrls',
+        P: 'pretty',
+        r: 'recursive',
+        w: 'maxWait',
+    }
+
+    // phân tích command//////////////////
+    while (true) {
+        // eslint-disable-line no-constant-condition
+        arg = args.shift()
+
+        if (!arg) {
+            break
+        }
+
+        const matches = /^-?-([^=]+)(?:=(.+)?)?/.exec(arg)
+
+        if (matches) {
+            const key =
+                aliases[matches[1]] ||
+                matches[1].replace(/-\w/g, (_matches) => _matches[1].toUpperCase())
+                // eslint-disable-next-line no-nested-ternary
+            const value = matches[2] ?
+                matches[2] :
+                args[0] && !args[0].startsWith('-') ?
+                args.shift() :
+                true
+
+            options[key] = value
+        } else {
+            url = arg
+        }
+    }
+    if (!url || options.help) {
+        help()
+    }
+    return options
 }
 
-while (true) {
-  // eslint-disable-line no-constant-condition
-  arg = args.shift()
-
-  if (!arg) {
-    break
-  }
-
-  const matches = /^-?-([^=]+)(?:=(.+)?)?/.exec(arg)
-
-  if (matches) {
-    const key =
-      aliases[matches[1]] ||
-      matches[1].replace(/-\w/g, (_matches) => _matches[1].toUpperCase())
-    // eslint-disable-next-line no-nested-ternary
-    const value = matches[2]
-      ? matches[2]
-      : args[0] && !args[0].startsWith('-')
-      ? args.shift()
-      : true
-
-    options[key] = value
-  } else {
-    url = arg
-  }
-}
-
-if (!url || options.help) {
-  process.stdout.write(`Usage:
+function help() {
+    process.stdout.write(`Usage:
   wappalyzer <url> [options]
 
 Examples:
@@ -72,33 +83,39 @@ Options:
   -r, --recursive          Follow links on pages (crawler)
   -a, --user-agent=...     Set the user agent string
 `)
+    process.exit(1)
+};
 
-  process.exit(1)
+async function startWep(database, url,_options) {
+    const options = commandAnalyzed(url,_options)
+    const wappalyzer = await new Wappalyzer(options,database['link'])
+    
+    try {
+        await wappalyzer.init()
+
+        const site = await wappalyzer.open(url)
+        const results = await site.analyze()
+        results.urls = url
+
+        const report = await createReport(results)
+        await database['tech'].addTech(report)
+
+
+        process.stdout.write(
+            `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
+        )
+
+        await wappalyzer.destroy()
+
+        //process.exit(0)
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error)
+
+        await wappalyzer.destroy()
+
+        //process.exit(1)
+    }
 }
 
-;(async function () {
-  const wappalyzer = await new Wappalyzer(options)
-
-  try {
-    await wappalyzer.init()
-
-    const site = await wappalyzer.open(url)
-
-    const results = await site.analyze()
-
-    process.stdout.write(
-      `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
-    )
-
-    await wappalyzer.destroy()
-
-    process.exit(0)
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error(error)
-
-    await wappalyzer.destroy()
-
-    process.exit(1)
-  }
-})()
+module.exports = startWep
