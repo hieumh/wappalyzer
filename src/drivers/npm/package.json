@@ -42,10 +42,13 @@
   "dependencies": {
     "async-request": "^1.2.0",
     "body-parser": "^1.19.0",
+    "chromium": "^3.0.2",
     "cors": "^2.8.5",
+    "express": "^4.17.1",
     "mongoose": "^5.10.9",
     "nodemon": "^2.0.6",
     "puppeteer": "^5.3.1",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "wappalyzer": "^6.5.26"
   }
 }

@@ -92,7 +92,7 @@ async function startWep(database, url,_options) {
     
     try {
         await wappalyzer.init()
-
+        
         const site = await wappalyzer.open(url)
         const results = await site.analyze()
         results.urls = url
@@ -101,9 +101,9 @@ async function startWep(database, url,_options) {
         await database['tech'].addTech(report)
 
 
-        process.stdout.write(
-            `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
-        )
+        // process.stdout.write(
+        //     `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
+        // )
 
         await wappalyzer.destroy()
 

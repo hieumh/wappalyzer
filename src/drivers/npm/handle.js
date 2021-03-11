@@ -12,6 +12,8 @@ const database = {'tech':null,'link':null}
 database['tech'] = new dataHandle('tech')
 database['link'] = new dataHandle('link')
 
+
+
 const app = express()
 app.use(bodyParser.json({limit:'50mb'}))
 app.use(bodyParser.urlencoded({
@@ -20,7 +22,7 @@ app.use(bodyParser.urlencoded({
 }))
 
 app.use((req,res,next) =>{
-    res.append('Access-Control-Allow-Origin',["http://localhost:3000"])
+    res.append('Access-Control-Allow-Origin',["http://localhost:3001"])
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.append("Access-Control-Allow-Credentials", 'true');
     res.append('Access-Control-Allow-Headers', 'Origin,Content-Type,Cache-Control,Authorization');
@@ -80,7 +82,7 @@ app.get('/last_report', async (req,res)=>{
 
 
 
-app.listen(3001, () => {
-    console.log("Server is running on port 3001")
+app.listen(3000, () => {
+    console.log("Server is running on port 3000")
 })
 

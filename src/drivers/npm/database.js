@@ -40,10 +40,10 @@ class dataHandle{
     }
     connect() {
         // connect to database
-        mongoose.connect("mongodb://localhost:27017/weppalyzer", { useNewUrlParser: true, useUnifiedTopology: true }).catch(error => {
+        this.db = mongoose.connect("mongodb://172.17.0.3:27017/wappalyzer", {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error => {
             console.log(error)
         })
-        console.log("[*] connection successfully")
+        //console.log("[*] connection successfully")
     }
     
     disconnect() {
@@ -70,18 +70,14 @@ class dataHandle{
         return this.findOne(target)
     }
     async addLink(obj) {
-        let exist = await this.checkExist({ pathname: obj.pathname })
-
-        if (!exist) {
-            let result = new this.modelTable(obj)
-            await result.save(err => {
-                if (err) {
-                    console.log(err)
-                    return
-                }
-                console.log("[*] add successfully")
-            })
-        }
+        let result = new this.modelTable(obj)
+        await result.save(err => {
+            if (err) {
+                console.log(err)
+                return
+            }
+            console.log("[*] add link successfully")
+        })
     }
     async findOne(target) {
         return await (this.modelTable.findOne(target)).exec()
@@ -108,6 +104,10 @@ class dataHandle{
             }
             console.log("[*] delete successfully")
         })
+    }
+    checkStatus(){
+        console.log(`[*] connection status: ${this.db.serverStatus()}`)
+        return this.db.serverStatus()
     }
 }
 

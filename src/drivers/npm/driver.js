@@ -209,7 +209,7 @@ class Driver {
 }
 
 class Site {
-    constructor(url, headers = {}, driver) {;
+    constructor(url, headers = {}, driver) {
         ({
             options: this.options,
             browser: this.browser,
@@ -220,6 +220,7 @@ class Site {
             ...this.options.headers,
             ...headers,
         }
+        this.database = driver.database
 
         this.driver = driver
 
@@ -427,11 +428,16 @@ class Site {
                     )
                 ).jsonValue()
             )
-
+            //console.log(`check link database connections: ${this.database}`)
+            // check status of connection to links
+            //this.database.checkStatus()
             //const Link = JSON.stringify(links)
+
             for (let i = 0; i < links.length; i++) {
-                    await this.database.addLink(links[i])
+                //console.log(`this is link[${i}]: ${links[i]}`)
+                await this.database.addLink(links[i])
             }
+            
             
             
 
