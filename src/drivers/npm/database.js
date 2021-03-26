@@ -7,9 +7,8 @@ class dataHandle{
     constructor(table,schema=undefined) {
         this.schemaDefault = {
             'link':{
-                hostname: String,
-                href: String,
-                pathname: String
+                url:String,
+                links:Array,
             },
             'tech':{
                 urls:String,
@@ -45,7 +44,6 @@ class dataHandle{
         })
         //console.log("[*] connection successfully")
     }
-    
     disconnect() {
         mongoose.connection.close(() => {
             console.log("[*] close")
@@ -69,30 +67,19 @@ class dataHandle{
     checkExist(target) {
         return this.findOne(target)
     }
-    async addLink(obj) {
+    async add(obj){
         let result = new this.modelTable(obj)
         await result.save(err => {
             if (err) {
                 console.log(err)
                 return
             }
-            console.log("[*] add link successfully")
         })
     }
     async findOne(target) {
         return await (this.modelTable.findOne(target)).exec()
     }
-    async addTech(obj){
-        let result = new this.modelTable(obj)
-        await result.save(err => {
-            if (err) {
-                console.log(err)
-            return
-        }
-        console.log("[*] add successfully")
-    })
-    }
-    async getTable(target){
+    async getTable(){
         return await this.modelTable.find({}).exec()
     }
     async delete(target) {
@@ -104,10 +91,6 @@ class dataHandle{
             }
             console.log("[*] delete successfully")
         })
-    }
-    checkStatus(){
-        console.log(`[*] connection status: ${this.db.serverStatus()}`)
-        return this.db.serverStatus()
     }
 }
 

@@ -6,7 +6,7 @@ const startWep = require('./cli')
 const express = require('express')
 const bodyParser = require('body-parser')
 const dataHandle = require('./database')
-const {search} = require('./lib')
+const {search,createTree} = require('./lib')
 
 const database = {'tech':null,'link':null}
 database['tech'] = new dataHandle('tech')
@@ -39,13 +39,13 @@ app.post('/url_analyze', async (req,res) => {
     
     // wait for analyze successfully
     await startWep(database,url)
+    url = url.split("//")[1]
 
     // data saved in database, and get it from database
     let data
     await database['tech'].findOne({urls:url}).then((result)=>{
         data = result
     })
-
     res.send(JSON.stringify(data))
 })
 
@@ -80,6 +80,26 @@ app.get('/last_report', async (req,res)=>{
     res.send(JSON.stringify(data[data.length-1]))
 })
 
+app.get('/urls_tree', async (req,res)=>{
+    const {url} = req.query
+
+    let result
+    await database['link'].findOne({url:url}).then((data)=>{
+        result = data
+    })
+    let arr = []
+    let hostname = url.split("/")[0]
+
+    result.links.forEach(ele =>{
+        if(hostname == ele.hostname){
+            arr.push(ele.pathname)
+        }
+    })
+    
+    let tree = createTree(arr)
+
+    res.send(JSON.stringify(tree))
+})
 
 
 app.listen(3000, () => {

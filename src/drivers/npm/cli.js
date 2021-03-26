@@ -88,7 +88,7 @@ Options:
 
 async function startWep(database, url,_options) {
     const options = commandAnalyzed(url,_options)
-    const wappalyzer = await new Wappalyzer(options,database['link'])
+    const wappalyzer = await new Wappalyzer(options,database['link'], url)
     
     try {
         await wappalyzer.init()
@@ -98,7 +98,9 @@ async function startWep(database, url,_options) {
         results.urls = url
 
         const report = await createReport(results)
-        await database['tech'].addTech(report)
+        report.urls = report.urls.split("//")[1]
+
+        await database['tech'].add(report)
 
 
         // process.stdout.write(

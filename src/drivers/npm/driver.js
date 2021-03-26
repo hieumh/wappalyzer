@@ -130,7 +130,7 @@ function get(url) {
 }
 
 class Driver {
-    constructor(options = {},database) {
+    constructor(options = {},database, ) {
         this.database = database
         this.options = {
             batchSize: 5,
@@ -428,17 +428,20 @@ class Site {
                     )
                 ).jsonValue()
             )
-            //console.log(`check link database connections: ${this.database}`)
-            // check status of connection to links
-            //this.database.checkStatus()
-            //const Link = JSON.stringify(links)
+            
+            // format lại dữ liệu ở đây:
+            url = url.href.split("//")[1]
+            
+            let data = {
+                url:url,
+                links:[]
+            }
 
             for (let i = 0; i < links.length; i++) {
-                //console.log(`this is link[${i}]: ${links[i]}`)
-                await this.database.addLink(links[i])
+                data.links.push(links[i])
             }
-            
-            
+            // add vào database ở đây
+            await this.database.add(data)      
             
 
             // CSS
