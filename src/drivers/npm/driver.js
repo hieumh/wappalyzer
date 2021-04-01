@@ -130,7 +130,7 @@ function get(url) {
 }
 
 class Driver {
-    constructor(options = {},database, ) {
+    constructor(options = {},database,url ) {
         this.database = database
         this.options = {
             batchSize: 5,
@@ -146,6 +146,7 @@ class Driver {
             ...options,
         }
 
+        this.url = url
         this.options.debug = Boolean(+this.options.debug)
         this.options.recursive = Boolean(+this.options.recursive)
         this.options.probe = Boolean(+this.options.probe)
@@ -223,6 +224,7 @@ class Site {
         this.database = driver.database
 
         this.driver = driver
+        this.url = driver.url
 
         try {
             this.originalUrl = new URL(url)
@@ -428,19 +430,16 @@ class Site {
                     )
                 ).jsonValue()
             )
-            
-            // format lại dữ liệu ở đây:
-            url = url.href.split("//")[1]
-            
+
             let data = {
-                url:url,
+                url:this.url,
                 links:[]
             }
 
             for (let i = 0; i < links.length; i++) {
                 data.links.push(links[i])
             }
-            // add vào database ở đây
+            // add to database
             await this.database.add(data)      
             
 

@@ -10,9 +10,48 @@ class dataHandle{
                 url:String,
                 links:Array,
             },
-            'tech':{
-                urls:String,
+            'dic':{
+                url:String,
+                dic:String
+            },
+            'wapp':{
+                url:String,
                 technologies: Array
+            },
+            'domain':{
+                url:String,
+                domains:Array
+            },
+            'gobuster':{
+                url:String,
+                gobuster:Array
+            },
+            'dns':{
+                url:String,
+                dns:Array
+            },
+            'server':{
+                url:String,
+                server:Array
+            },
+            'netcraft':{
+                url:String,
+                technologies:Array
+            },
+            'largeio':{
+                url:String,
+                technologies:Array
+            },
+            'report':{
+                url:String,
+                domain:String,
+                dic:String,
+                dns:String,
+                gobuster:String,
+                server:String,
+                netcraft:String,
+                largeio:String,
+                wapp:String
             }
         }
         this.mapSchema = {}

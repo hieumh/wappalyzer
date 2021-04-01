@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const Wappalyzer = require('./driver')
-const createReport = require('./lib')
+const addCve = require('./lib')
 let arg
 
 
@@ -95,12 +95,11 @@ async function startWep(database, url,_options) {
         
         const site = await wappalyzer.open(url)
         const results = await site.analyze()
-        results.urls = url
+        results.url = url
 
-        const report = await createReport(results)
-        report.urls = report.urls.split("//")[1]
-
-        await database['tech'].add(report)
+        const report = await addCve(results)
+        // report.url = report.url.split("//")[1]
+        await database['wapp'].add(report)
 
 
         // process.stdout.write(
