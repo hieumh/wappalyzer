@@ -15,20 +15,21 @@ async function processRequest(url) {
 
     try {
         results = await getDataFromCache(url);
-        
-    } catch (err) {
-        try {
-            results = await getDataByCrawl(url);
-            
-        } catch {
-            return "Can not load data from largeio";
-        }
-
-    } finally {
         dataResults = results.data;
         dataResults['technologies'] = dataResults['apps'];
         delete dataResults['apps'];
         return (dataResults);
+
+    } catch (err) {
+        try {
+            results = await getDataByCrawl(url);
+            dataResults = results.data;
+            dataResults['technologies'] = dataResults['apps'];
+            delete dataResults['apps'];
+            return (dataResults);
+        } catch {
+            return "Can not load data from largeio";
+        }
     }
 }
 

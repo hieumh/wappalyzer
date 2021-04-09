@@ -8,7 +8,7 @@ let portServerApi = "5000"
 
 
 async function getDns(url){
-    url = url.split("//")[1]
+    // url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
@@ -17,12 +17,21 @@ async function getDns(url){
     return result.body
 }
 
+// async function getDomain(url){
+//     url = url.split("//")[1]
+//     if(url[url.length-1] == "/"){
+//         url = url.slice(0,-1)
+//     }
+//     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/sublist3r?url=${url}`)
+//     return result.body
+// }
+
 async function getDomain(url){
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/sublist3r?url=${url}`)
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whois?url=${url}`)
     return result.body
 }
 
@@ -98,6 +107,8 @@ function createTree(arr){
     }
     return obj
 }
+
+
 module.exports = addCve
 module.exports.search = search
 module.exports.treeParse = treeParse

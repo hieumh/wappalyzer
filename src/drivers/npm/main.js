@@ -93,7 +93,7 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     // save to database
     let tree = createTree(arr)
-
+    delete Object.assign(tree, {["/"]: tree[""] })[""];
     await database['dic'].add({
         url:url,
         dic:JSON.stringify(tree)
@@ -106,7 +106,7 @@ app.post('/url_analyze/dns',async (req,res)=>{
     let {url} = req.body
     let dnsInfor 
     await getDns(url).then(data => {
-        dnsInfor= JSON.parse(data) 
+        dnsInfor= JSON.parse(data)
     })
 
     await database['dns'].add({
@@ -123,7 +123,6 @@ app.post('/url_analyze/domain', async (req,res)=>{
         domainInfor = JSON.parse(data)
     })
 
-    // console.log(`this is dns ${domainInfor}`)
     await database['domain'].add({
         url:url,
         domains:domainInfor
@@ -175,12 +174,20 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     })
 
     let temp 
+    let tech
+    if(!result.technologies){
+        tech = []
+    } else {
+        tech = result.technologies
+    }
+
     await addCve({
         url:url,
-        technologies:result.technologies
+        technologies:tech
     }).then(data=>{
         temp =data
     })
+    
     
     await database['largeio'].add(temp)
     res.send(JSON.stringify(temp))
@@ -199,6 +206,38 @@ app.get("/url_analyze/:tool",async (req,res)=>{
     const url = req.query.url
 
     const result = await database[tool].findOne({url:url})
+})
+
+// create report (base on the last result of each table)
+app.post("/create_report",async (req,res)=>{
+    let data = {}
+    let {url} = req.body
+    await database['dic'].getTable().then((result)=>{
+        data['dic'] = result
+    })
+
+    await database['wapp'].getTable().then((result)=>{
+        data['wapp'] = result
+    })
+    await database['domain'].getTable().then((result)=>{
+        data['domain'] = result
+    })
+    await database['dns'].getTable().then((result)=>{
+        data['dns'] = result
+    })
+    await database['server'].getTable().then((result)=>{
+        data['server'] = result
+    })
+    await database['netcraft'].getTable().then((result)=>{
+        data['netcraft'] = result
+    })
+    await database['largeio'].getTable().then((result)=>{
+        data['largeio'] = result
+    })
+    data['url'] = url
+    await database['report'].add(data)
+
+    res.send("create database success")
 })
 
 // get specified report
