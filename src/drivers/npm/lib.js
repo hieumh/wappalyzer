@@ -1,5 +1,8 @@
 const request = require('async-request')
 
+let hostDatabase = "172.17.0.3"
+let portDatabase ="27017"
+
 let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
@@ -118,3 +121,5 @@ module.exports.createTree = createTree
 module.exports.getDns = getDns
 module.exports.getDomain = getDomain
 module.exports.getServerInfor = getServerInfor
+module.exports.hostDatabase = hostDatabase
+module.exports.portDatabase = portDatabase

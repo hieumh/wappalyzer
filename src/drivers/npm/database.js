@@ -1,5 +1,6 @@
 'use strict'
 const mongoose = require("mongoose")
+const {hostDatabase,portDatabase} = require("./lib")
 const { Schema } = mongoose
 
 
@@ -78,7 +79,7 @@ class dataHandle{
     }
     connect() {
         // connect to database
-        this.db = mongoose.connect("mongodb://172.17.0.3:27017/wappalyzer", {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error => {
+        this.db = mongoose.connect(`mongodb://${hostDatabase}:${portDatabase}/wappalyzer`, {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error => {
             console.log(error)
         })
         //console.log("[*] connection successfully")
