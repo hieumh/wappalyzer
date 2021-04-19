@@ -8,12 +8,13 @@ let portServerApi = "5000"
 
 
 async function getDns(url){
-    // url = url.split("//")[1]
+    url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
     
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
+    // console.log(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
     return result.body
 }
 

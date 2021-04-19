@@ -99,6 +99,7 @@ async function startWep(database, url,_options) {
 
         const report = await addCve(results)
         // report.url = report.url.split("//")[1]
+
         await database['wapp'].add(report)
 
 

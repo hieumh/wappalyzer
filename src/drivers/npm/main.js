@@ -109,6 +109,8 @@ app.post('/url_analyze/dns',async (req,res)=>{
         dnsInfor= JSON.parse(data)
     })
 
+    console.log(dnsInfor);
+
     await database['dns'].add({
         url:url,
         dns:dnsInfor
@@ -122,6 +124,13 @@ app.post('/url_analyze/domain', async (req,res)=>{
     await getDomain(url).then(data =>{
         domainInfor = JSON.parse(data)
     })
+
+    let keys = Object.keys(domainInfor)
+    for(let key of keys){
+        if(!Array.isArray(domainInfor[key])){
+            domainInfor[key] = new Array(domainInfor[key])
+        }
+    }
 
     await database['domain'].add({
         url:url,
