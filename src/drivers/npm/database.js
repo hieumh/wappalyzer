@@ -4,7 +4,7 @@ const {hostDatabase,portDatabase} = require("./lib")
 const { Schema } = mongoose
 
 
-class dataHandle{
+class databaseHandle{
     constructor(table,schema=undefined) {
         this.schemaDefault = {
             'link':{
@@ -19,7 +19,19 @@ class dataHandle{
                 url:String,
                 technologies: Array
             },
-            'domain':{
+            'whatweb':{
+                url:String, 
+                technologies: Array
+            },
+            'webtech':{
+                url:String, 
+                technologies: Array
+            },
+            'whois':{
+                url:String,
+                domains:Array
+            },
+            'sublist3r':{
                 url:String,
                 domains:Array
             },
@@ -43,6 +55,22 @@ class dataHandle{
                 url:String,
                 technologies:Array
             },
+            'wafw00f':{
+                url:String,
+                waf:Array
+            },
+            'wpscan':{
+                url:String,
+                wp:Array
+            },
+            'droopescan':{
+                url:String,
+                droop:Array
+            },
+            'nikto':{
+                url:String,
+                nikto:Array
+            },
             'report':{
                 url:String,
                 domain:String,
@@ -65,9 +93,9 @@ class dataHandle{
                 throw "[*] table is undefined here"
             }
             if(this.schemaDefault[this.table]){
-                this.schema=this.schemaDefault[this.table]
+                this.schema = this.schemaDefault[this.table]
             }
-            if(this.schemaDefault[this.table] == undefined && this.schema==undefined){
+            if(this.schemaDefault[this.table] == undefined && this.schema == undefined){
                 throw "[*] schema is undefined"
             }
             this.connect()
@@ -79,13 +107,13 @@ class dataHandle{
     }
     connect() {
         // connect to database
-        this.db = mongoose.connect(`mongodb://${hostDatabase}:${portDatabase}/wappalyzer`, {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error => {
+        this.db = mongoose.connect(`mongodb://${hostDatabase}:${portDatabase}/wappalyzer`, {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error=>{
             console.log(error)
         })
         //console.log("[*] connection successfully")
     }
     disconnect() {
-        mongoose.connection.close(() => {
+        mongoose.connection.close(()=>{
             console.log("[*] close")
         })
     }
@@ -109,7 +137,7 @@ class dataHandle{
     }
     async add(obj){
         let result = new this.modelTable(obj)
-        await result.save(err => {
+        await result.save(err=>{
             if (err) {
                 console.log(err)
                 return
@@ -124,7 +152,7 @@ class dataHandle{
     }
     async delete(target) {
         // delete one function
-        await this.modelTable.deleteOne(target, (err) => {
+        await this.modelTable.deleteOne(target, (err)=>{
             if (err) {
                 console.log(err)
                 return
@@ -134,4 +162,4 @@ class dataHandle{
     }
 }
 
-module.exports = dataHandle
+module.exports = databaseHandle

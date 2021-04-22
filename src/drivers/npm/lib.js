@@ -9,7 +9,7 @@ let portCveApi = "4000"
 let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
-
+// get dns information
 async function getDns(url){
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
@@ -17,20 +17,17 @@ async function getDns(url){
     }
     
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
-    // console.log(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
     return result.body
 }
 
-// async function getDomain(url){
-//     url = url.split("//")[1]
-//     if(url[url.length-1] == "/"){
-//         url = url.slice(0,-1)
-//     }
-//     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/sublist3r?url=${url}`)
-//     return result.body
-// }
+// get domain information with sublist3r
+async function getDomainSub(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/sublist3r?url=${url}`)
+    return result.body
+}
 
-async function getDomain(url){
+// get domain information with whois
+async function getDomainWhoIs(url){
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
@@ -39,10 +36,67 @@ async function getDomain(url){
     return result.body
 }
 
+// get file and folder with gobuster
+async function getDicGobuster(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/gobuster?url=${url}`)
+    return result.body
+}
+
+// get technologies of website with whatweb
+async function getTechWhatWeb(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`)
+    return result.body
+}
+
+// get technologies of website with webtech
+async function getTechWebTech(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/webtech?url=${url}`)
+    return result.body
+}
+
+// get network information of target url with nmap
 async function getServerInfor(url){
-    
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nmap?url=${url}`)
     return result.body
+}
+
+// detech web firewall
+async function getDWab(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wafw00f?url=${url}`)
+    return result.body
+}
+
+// scaning
+async function wpScan(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wpscan?url=${url}`)
+    return result.body
+}
+
+async function droopScan(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/droopescan?url=${url}`)
+    return result.body
+}
+
+async function niktoScan(url){
+    console.log(`hello world http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nikto?url=${url}`)
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nikto?url=${url}`)
+    console.log(result)
+
+    return result.body
+}
+
+// search with searchsploit with source https://www.exploit-db.com/searchsploit
+async function searchsploit(pattern){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/searchsploit?pattern=${pattern}`)
+    return result.body
+}
+
+// search with cve-api with source https://github.com/Beyarz/Cve-api.git
+async function search(data){
+    let result = await request(`http://${hostCveApi}:${portCveApi}/cve?target=${data.target}&year=${data.year}`)
+    let cve = JSON.parse(result.body)
+    
+    return cve[0]
 }
 
 async function addCve(data){
@@ -58,13 +112,6 @@ async function addCve(data){
         temp.technologies[i]['cve'] = cve[0]
     }
     return temp
-}
-
-async function search(data){
-    let result = await request(`http://${hostCveApi}:${portCveApi}/cve?target=${data.target}&year=${data.year}`)
-    let cve = JSON.parse(result.body)
-    
-    return cve[0]
 }
 
 function handleLink(str){
@@ -102,6 +149,7 @@ function treeParse(path_str,index=0,path={}){
     return _treeParse(path_str,0,path)
 }
 
+// get file and folder information with wappalyzer
 function createTree(arr){
     let str
     let obj = {}
@@ -119,7 +167,17 @@ module.exports.treeParse = treeParse
 module.exports.handleLink = handleLink
 module.exports.createTree = createTree
 module.exports.getDns = getDns
-module.exports.getDomain = getDomain
+module.exports.getDomainSub = getDomainSub
+module.exports.getDomainWhoIs = getDomainWhoIs
 module.exports.getServerInfor = getServerInfor
+module.exports.getDicGobuster = getDicGobuster
+module.exports.getTechWhatWeb = getTechWhatWeb
+module.exports.getTechWebTech = getTechWebTech
+module.exports.getDWab = getDWab
+module.exports.wpScan = wpScan
+module.exports.droopScan = droopScan
+module.exports.niktoScan = niktoScan
+module.exports.searchsploit = searchsploit
+
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase

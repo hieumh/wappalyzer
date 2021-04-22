@@ -5,22 +5,36 @@ const fs = require('fs')
 const startWep = require('./cli')
 const express = require('express')
 const bodyParser = require('body-parser')
-const dataHandle = require('./database')
+const databaseHandle = require('./database')
 const addCve = require('./lib')
-const {search,createTree,getDns,getDomain,getServerInfor} = require('./lib')
+const {search,createTree,getDns,getDomainSub,getDomainWhoIs,getServerInfor,getDicGobuster,getTechWhatWeb,getTechWebTech,getDWab,wpScan,droopScan,niktoScan,searchSploit} = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
 
 const database = {'wapp':null,'link':null}
-database['wapp'] = new dataHandle('wapp')
-database['link'] = new dataHandle('link')
-database['domain'] = new dataHandle('domain')
-database['dns'] = new dataHandle('dns')
-database['server'] = new dataHandle('server')
-database['netcraft'] = new dataHandle('netcraft')
-database['largeio'] = new dataHandle('largeio')
-database['dic'] = new dataHandle('dic')
-database['report'] = new dataHandle('report')
+database['wapp'] = new databaseHandle('wapp')
+database['netcraft'] = new databaseHandle('netcraft')
+database['largeio'] = new databaseHandle('largeio')
+database['whatweb'] = new databaseHandle('whatweb')
+database['webtech'] = new databaseHandle('webtech')
+
+database['link'] = new databaseHandle('link')
+database['dic'] = new databaseHandle('dic')
+database['gobuster'] = new databaseHandle('gobuster')
+
+database['whois'] = new databaseHandle('whois')
+database['sublist3r'] = new databaseHandle('sublist3r')
+
+database['dns'] = new databaseHandle('dns')
+database['server'] = new databaseHandle('server')
+
+database['wafw00f'] = new databaseHandle('wafw00f')
+
+database['wpscan'] = new databaseHandle('wpscan')
+database['droopescan'] = new databaseHandle('droopescan')
+database['nikto'] = new databaseHandle('nikto')
+
+database['report'] = new databaseHandle('report')
 
 
 
@@ -57,7 +71,8 @@ app.get("/url_analyze/:tool",async (req,res)=>{
     res.send(JSON.stringify(result))
 })
 
-// analyze url with specified tools
+///////////////////////////////////////////////////////////////
+// analyze technologies for url
 app.post('/url_analyze/wapp',async (req,res) => {
     let {url} = req.body
     
@@ -69,9 +84,121 @@ app.post('/url_analyze/wapp',async (req,res) => {
     await database['wapp'].findOne({url:url}).then((result)=>{
         data = result
     })
+
+    // log here
     res.send(JSON.stringify(data))
 })
 
+app.post('/url_analyze/netcraft', async (req,res)=>{
+    let {url} = req.body
+
+    let result 
+    await netcraft.netcraft(url).then(data=>{
+        result = JSON.parse(data)
+    })
+
+    let temp 
+    await addCve({
+        url:url,
+        technologies:result.technologies
+    }).then(data=>{
+        temp =data
+    })
+    
+    await database['netcraft'].add(temp)
+    res.send(JSON.stringify(temp))
+})
+
+app.post('/url_analyze/largeio', async (req,res)=>{
+    let {url, options} = req.body
+
+    let result 
+    await largeio.largeio(url).then(data=>{
+        result = JSON.parse(data)
+    })
+
+    let temp 
+    let tech
+    if(!result.technologies){
+        tech = []
+    } else {
+        tech = result.technologies
+    }
+
+    await addCve({
+        url:url,
+        technologies:tech
+    }).then(data=>{
+        temp =data
+    })
+    
+    
+    await database['largeio'].add(temp)
+    res.send(JSON.stringify(temp))
+})
+
+app.post('/url_analyze/whatweb', async (req,res)=>{
+    let {url, options} = req.body
+
+    let result 
+    await getTechWhatWeb(url).then(data=>{
+        result = data
+    })
+
+    let tech
+    if(!result.technologies){
+        tech = []
+    } else {
+        tech = result.technologies
+    }
+
+    let temp
+    await addCve({
+        url:url,
+        technologies:tech
+    }).then(data=>{
+        temp =data
+    })
+    
+    
+    await database['whatweb'].add(temp)
+    res.send(JSON.stringify(temp))
+})
+
+app.post('/url_analyze/webtech', async (req,res)=>{
+    let {url, options} = req.body
+
+    let result 
+    await getTechWebTech(url).then(data=>{
+        result = data
+    })
+
+    let tech
+    if(!result.technologies){
+        tech = []
+    } else {
+        tech = result.technologies
+    }
+
+    let temp
+    await addCve({
+        url:url,
+        technologies:tech
+    }).then(data=>{
+        temp =data
+    })
+    
+    
+    await database['largeio'].add(temp)
+    res.send(JSON.stringify(temp))
+})
+////////////////////////////////////////////////////
+
+
+
+
+////////////////////////////////////////////////////
+// analyze directory and file enumeration
 app.post('/url_analyze/dic',async (req,res)=>{
     let {url} = req.body
 
@@ -102,10 +229,40 @@ app.post('/url_analyze/dic',async (req,res)=>{
     res.send(JSON.stringify(tree))
 })
 
+
+app.post('/url_analyze/gobuster', async (req,res)=>{
+    let {url} = req.body
+
+    let temp
+        await getDicGobuster(url).then(data=>{
+            console.log(data)
+            if (data == "Wrong URL"){
+                temp = {}
+            } else {
+                temp = JSON.parse(data)
+            }
+        })
+
+    // add to database
+    let data = {
+        url:url,
+        gobuster:temp
+    }
+    await database['gobuster'].add(data)
+    res.send(JSON.stringify(data))
+})
+
+///////////////////////////////////////////////////
+
+
+
+
+///////////////////////////////////////////////////
+// analyze dns information 
 app.post('/url_analyze/dns',async (req,res)=>{
     let {url} = req.body
     let dnsInfor 
-    await getDns(url).then(data => {
+    await getDns(url).then(data=>{
         dnsInfor= JSON.parse(data)
     })
 
@@ -117,11 +274,17 @@ app.post('/url_analyze/dns',async (req,res)=>{
     })
     res.send(JSON.stringify(dnsInfor))
 })
+///////////////////////////////////////////////////
 
-app.post('/url_analyze/domain', async (req,res)=>{
+
+
+
+///////////////////////////////////////////////////
+// analyze information for domain
+app.post('/url_analyze/whois', async (req,res)=>{
     let {url} =  req.body
     let domainInfor 
-    await getDomain(url).then(data =>{
+    await getDomainWhoIs(url).then(data=>{
         domainInfor = JSON.parse(data)
     })
 
@@ -132,17 +295,37 @@ app.post('/url_analyze/domain', async (req,res)=>{
         }
     }
 
-    await database['domain'].add({
+    await database['whois'].add({
         url:url,
         domains:domainInfor
     })
     res.send(JSON.stringify(domainInfor))
 })
 
+app.post('/url_analyze/sublist3r', async (req,res)=>{
+    let {url} =  req.body
+    let domainInfor 
+    await getDomainSub(url).then(data=>{
+        domainInfor = JSON.parse(data)
+    })
+
+    await database['sublist3r'].add({
+        url:url,
+        domains:domainInfor
+    })
+    res.send(JSON.stringify(domainInfor))
+})
+/////////////////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////////////////
+// server information (using nmap information)
 app.post('/url_analyze/server', async (req,res)=>{
     let {url} =  req.body
     let serverInfor 
-    await getServerInfor(url).then(data =>{
+    await getServerInfor(url).then(data=>{
         serverInfor=data
     })
 
@@ -153,57 +336,87 @@ app.post('/url_analyze/server', async (req,res)=>{
     })
     res.send(JSON.stringify(serverInfor))
 })
+/////////////////////////////////////////////////////
 
-app.post('/url_analyze/netcraft', async (req,res)=>{
-    let {url} = req.body
 
-    let result 
-    await netcraft.netcraft(url).then(data => {
-        result = JSON.parse(data)
+
+
+////////////////////////////////////////////////////
+// detect web firewall
+app.post('/url_analyze/wafw00f', async (req,res)=>{
+    let {url} =  req.body
+    let detectWaf 
+    await getDWab(url).then(data=>{
+        detectWaf=data
     })
 
-    let temp 
-    await addCve({
+    // console.log(`this is server infor ${serverInfor}`)
+    await database['wafw00f'].add({
         url:url,
-        technologies:result.technologies
-    }).then(data=>{
-        temp =data
+        waf:detectWaf
     })
-    
-    await database['netcraft'].add(temp)
-    res.send(JSON.stringify(temp))
+    res.send(JSON.stringify(detectWaf))
+})
+///////////////////////////////////////////////////
+
+
+
+
+
+////////////////////////////////////////////////////
+// scanning
+app.post('/url_analyze/wpscan', async (req,res)=>{
+    let {url} =  req.body
+    let wp 
+    await wpScan(url).then(data=>{
+        wp=data
+    })
+
+    // console.log(`this is server infor ${serverInfor}`)
+    await database['wpscan'].add({
+        url:url,
+        wp:wp
+    })
+    res.send(JSON.stringify(wp))
 })
 
-app.post('/url_analyze/largeio', async (req,res)=>{
-    let {url, options} = req.body
-
-    let result 
-    await largeio.largeio(url).then(data => {
-        result = JSON.parse(data)
+app.post('/url_analyze/droopescan', async (req,res)=>{
+    let {url} =  req.body
+    let droop 
+    await droopScan(url).then(data=>{
+        droop=data
     })
 
-    let temp 
-    let tech
-    if(!result.technologies){
-        tech = []
-    } else {
-        tech = result.technologies
-    }
-
-    await addCve({
+    // console.log(`this is server infor ${serverInfor}`)
+    await database['droopescan'].add({
         url:url,
-        technologies:tech
-    }).then(data=>{
-        temp =data
+        droop:droop
     })
-    
-    
-    await database['largeio'].add(temp)
-    res.send(JSON.stringify(temp))
+    res.send(JSON.stringify(droop))
 })
+
+app.post('/url_analyze/nikto', async (req,res)=>{
+    let {url} =  req.body
+    let nikto 
+    await niktoScan(url).then(data=>{
+        nikto=data
+    })
+
+    // console.log(`this is server infor ${serverInfor}`)
+    await database['nikto'].add({
+        url:url,
+        nikto:nikto
+    })
+    res.send(JSON.stringify(nikto))
+})
+///////////////////////////////////////////////////
+
+
+
+
 
 //////////////////////////////////////////////////////////////////
-app.get('/search/:target/:year', async (req,res) => {
+app.get('/search/:target/:year', async (req,res)=>{
     const {target, year} = req.params
     let data = await search({target:target,year:year})
 
