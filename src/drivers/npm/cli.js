@@ -86,7 +86,7 @@ Options:
     process.exit(1)
 };
 
-async function startWep(database, url,_options, token) {
+async function startWep(database, url, token, _options) {
     const options = commandAnalyzed(url,_options)
     const wappalyzer = await new Wappalyzer(options,database['link'], url)
     

@@ -88,7 +88,7 @@ app.post('/url_analyze/wapp',async (req,res) => {
     let token = req.body.token;
 
     // wait for analyze successfully
-    await startWep(database,url)
+    await startWep(database,url, token)
 
     // data saved in database, and get it from database
     let data
