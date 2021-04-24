@@ -11,6 +11,9 @@ const {search,createTree,getDns,getDomainSub,getDomainWhoIs,getServerInfor,getDi
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
 
+// Add uuidv
+const uuidv4 = require('uuid')
+
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
 database['netcraft'] = new databaseHandle('netcraft')
@@ -59,6 +62,12 @@ app.use((req,res,next) =>{
 //     res.sendFile(path.join(__dirname, 'build', 'index.html'))
 // })
 
+// Token generator
+app.get("/token/generator", (req, res) => {
+    let token = uuidv4();
+    res.send(token)
+});
+
 // get result analyzed in database
 app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
@@ -75,9 +84,11 @@ app.get("/url_analyze/:tool",async (req,res)=>{
 // analyze technologies for url
 app.post('/url_analyze/wapp',async (req,res) => {
     let {url} = req.body
-    
+
+    let token = req.body.token;
+
     // wait for analyze successfully
-    await startWep(database,url)
+    await startWep(database,url, token)
 
     // data saved in database, and get it from database
     let data
@@ -92,18 +103,24 @@ app.post('/url_analyze/wapp',async (req,res) => {
 app.post('/url_analyze/netcraft', async (req,res)=>{
     let {url} = req.body
 
+    // Get token from request
+    let token = req.body.token;
+
     let result 
     await netcraft.netcraft(url).then(data=>{
         result = JSON.parse(data)
     })
 
-    let temp 
+    let temp
     await addCve({
         url:url,
         technologies:result.technologies
     }).then(data=>{
-        temp =data
+        temp = data
     })
+
+    // Add token to result
+    temp['token'] = token
     
     await database['netcraft'].add(temp)
     res.send(JSON.stringify(temp))
@@ -111,6 +128,9 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
 app.post('/url_analyze/largeio', async (req,res)=>{
     let {url, options} = req.body
+
+    // Get token from request
+    let token = req.body.token;
 
     let result 
     await largeio.largeio(url).then(data=>{
@@ -132,6 +152,8 @@ app.post('/url_analyze/largeio', async (req,res)=>{
         temp =data
     })
     
+    // Add token to result
+    temp['token'] = token
     
     await database['largeio'].add(temp)
     res.send(JSON.stringify(temp))
@@ -139,6 +161,8 @@ app.post('/url_analyze/largeio', async (req,res)=>{
 
 app.post('/url_analyze/whatweb', async (req,res)=>{
     let {url, options} = req.body
+
+    let token = req.body.token;
 
     let result 
     await getTechWhatWeb(url).then(data=>{
@@ -160,6 +184,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
         temp =data
     })
     
+    temp['token'] = token
     
     await database['whatweb'].add(temp)
     res.send(JSON.stringify(temp))
@@ -167,6 +192,8 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
 app.post('/url_analyze/webtech', async (req,res)=>{
     let {url, options} = req.body
+
+    let token = req.body.token;
 
     let result 
     await getTechWebTech(url).then(data=>{
@@ -188,7 +215,8 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         temp =data
     })
     
-    
+    temp['token'] = token
+
     await database['largeio'].add(temp)
     res.send(JSON.stringify(temp))
 })
@@ -201,6 +229,8 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 // analyze directory and file enumeration
 app.post('/url_analyze/dic',async (req,res)=>{
     let {url} = req.body
+
+    let token = req.body.token;
 
     // get link from database
     let result
@@ -223,7 +253,8 @@ app.post('/url_analyze/dic',async (req,res)=>{
     delete Object.assign(tree, {["/"]: tree[""] })[""];
     await database['dic'].add({
         url:url,
-        dic:JSON.stringify(tree)
+        dic:JSON.stringify(tree),
+        token: token
     })
 
     res.send(JSON.stringify(tree))
@@ -232,6 +263,8 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
 app.post('/url_analyze/gobuster', async (req,res)=>{
     let {url} = req.body
+
+    let token = req.body.token;
 
     let temp
         await getDicGobuster(url).then(data=>{
@@ -246,7 +279,8 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     // add to database
     let data = {
         url:url,
-        gobuster:temp
+        gobuster:temp,
+        token: token
     }
     await database['gobuster'].add(data)
     res.send(JSON.stringify(data))
@@ -261,6 +295,9 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 // analyze dns information 
 app.post('/url_analyze/dns',async (req,res)=>{
     let {url} = req.body
+    
+    let token = req.body.token;
+
     let dnsInfor 
     await getDns(url).then(data=>{
         dnsInfor= JSON.parse(data)
@@ -270,7 +307,8 @@ app.post('/url_analyze/dns',async (req,res)=>{
 
     await database['dns'].add({
         url:url,
-        dns:dnsInfor
+        dns:dnsInfor,
+        token: token
     })
     res.send(JSON.stringify(dnsInfor))
 })
@@ -283,6 +321,9 @@ app.post('/url_analyze/dns',async (req,res)=>{
 // analyze information for domain
 app.post('/url_analyze/whois', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let domainInfor 
     await getDomainWhoIs(url).then(data=>{
         domainInfor = JSON.parse(data)
@@ -297,13 +338,17 @@ app.post('/url_analyze/whois', async (req,res)=>{
 
     await database['whois'].add({
         url:url,
-        domains:domainInfor
+        domains:domainInfor,
+        token: token
     })
     res.send(JSON.stringify(domainInfor))
 })
 
 app.post('/url_analyze/sublist3r', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let domainInfor 
     await getDomainSub(url).then(data=>{
         domainInfor = JSON.parse(data)
@@ -311,7 +356,8 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
 
     await database['sublist3r'].add({
         url:url,
-        domains:domainInfor
+        domains:domainInfor,
+        token: token
     })
     res.send(JSON.stringify(domainInfor))
 })
@@ -324,6 +370,9 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
 // server information (using nmap information)
 app.post('/url_analyze/server', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let serverInfor 
     await getServerInfor(url).then(data=>{
         serverInfor=data
@@ -332,7 +381,8 @@ app.post('/url_analyze/server', async (req,res)=>{
     // console.log(`this is server infor ${serverInfor}`)
     await database['server'].add({
         url:url,
-        server:serverInfor
+        server:serverInfor,
+        token: token
     })
     res.send(JSON.stringify(serverInfor))
 })
@@ -345,6 +395,9 @@ app.post('/url_analyze/server', async (req,res)=>{
 // detect web firewall
 app.post('/url_analyze/wafw00f', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let detectWaf 
     await getDWab(url).then(data=>{
         detectWaf=data
@@ -353,7 +406,8 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     // console.log(`this is server infor ${serverInfor}`)
     await database['wafw00f'].add({
         url:url,
-        waf:detectWaf
+        waf:detectWaf,
+        token: token
     })
     res.send(JSON.stringify(detectWaf))
 })
@@ -367,6 +421,9 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
 // scanning
 app.post('/url_analyze/wpscan', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let wp 
     await wpScan(url).then(data=>{
         wp=data
@@ -375,13 +432,17 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     // console.log(`this is server infor ${serverInfor}`)
     await database['wpscan'].add({
         url:url,
-        wp:wp
+        wp:wp,
+        token: token
     })
     res.send(JSON.stringify(wp))
 })
 
 app.post('/url_analyze/droopescan', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let droop 
     await droopScan(url).then(data=>{
         droop=data
@@ -390,13 +451,17 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     // console.log(`this is server infor ${serverInfor}`)
     await database['droopescan'].add({
         url:url,
-        droop:droop
+        droop:droop,
+        token: token
     })
     res.send(JSON.stringify(droop))
 })
 
 app.post('/url_analyze/nikto', async (req,res)=>{
     let {url} =  req.body
+
+    let token = req.body.token;
+
     let nikto 
     await niktoScan(url).then(data=>{
         nikto=data
@@ -405,7 +470,8 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     // console.log(`this is server infor ${serverInfor}`)
     await database['nikto'].add({
         url:url,
-        nikto:nikto
+        nikto:nikto,
+        token: token
     })
     res.send(JSON.stringify(nikto))
 })
@@ -421,13 +487,6 @@ app.get('/search/:target/:year', async (req,res)=>{
     let data = await search({target:target,year:year})
 
     res.send(JSON.stringify(data))
-})
-
-app.get("/url_analyze/:tool",async (req,res)=>{
-    const {tool} = req.params
-    const url = req.query.url
-
-    const result = await database[tool].findOne({url:url})
 })
 
 // create report (base on the last result of each table)
