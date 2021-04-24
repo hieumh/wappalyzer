@@ -493,27 +493,30 @@ app.get('/search/:target/:year', async (req,res)=>{
 app.post("/create_report",async (req,res)=>{
     let data = {}
     let {url} = req.body
-    await database['dic'].getTable().then((result)=>{
-        data['dic'] = result
+
+    let token = req.body.token;
+    
+    await database['dic'].getTable(token).then((result)=>{
+        data['dic'] = JSON.stringify(result)
     })
 
-    await database['wapp'].getTable().then((result)=>{
-        data['wapp'] = result
+    await database['wapp'].getTable(token).then((result)=>{
+        data['wapp'] = JSON.stringify(result)
     })
-    await database['domain'].getTable().then((result)=>{
-        data['domain'] = result
+    await database['whois'].getTable(token).then((result)=>{
+        data['domain'] = JSON.stringify(result)
     })
-    await database['dns'].getTable().then((result)=>{
-        data['dns'] = result
+    await database['dns'].getTable(token).then((result)=>{
+        data['dns'] = JSON.stringify(result)
     })
-    await database['server'].getTable().then((result)=>{
-        data['server'] = result
+    await database['server'].getTable(token).then((result)=>{
+        data['server'] = JSON.stringify(result)
     })
-    await database['netcraft'].getTable().then((result)=>{
-        data['netcraft'] = result
+    await database['netcraft'].getTable(token).then((result)=>{
+        data['netcraft'] = JSON.stringify(result)
     })
-    await database['largeio'].getTable().then((result)=>{
-        data['largeio'] = result
+    await database['largeio'].getTable(token).then((result)=>{
+        data['largeio'] = JSON.stringify(result)
     })
     data['url'] = url
     await database['report'].add(data)

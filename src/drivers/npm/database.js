@@ -163,8 +163,8 @@ class databaseHandle{
     async findOne(target) {
         return await (this.modelTable.findOne(target)).exec()
     }
-    async getTable(){
-        return await this.modelTable.find({}).exec()
+    async getTable(token){
+        return await this.modelTable.find({ token: token }).exec()
     }
     async delete(target) {
         // delete one function
