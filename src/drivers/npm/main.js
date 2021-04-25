@@ -489,31 +489,67 @@ app.get('/search/:target/:year', async (req,res)=>{
     res.send(JSON.stringify(data))
 })
 
+app.get('/searchDatabase', async (req, res) => {
+    let fields = ['url', 'domain', 'dic','dns','gobuster','server','netcraft','largeio','wapp'];
+
+    // Pre-process pattern
+    let pattern = req.query.pattern;
+
+    // Find all spaces and replace them with "|"
+    let regex = new RegExp('\\s', 'g');
+    pattern = `(${pattern.replaceAll(regex, '|')})`;
+
+    let results = [];
+
+    for (let index = 0; index < fields.length; index++) {
+        try {
+            regex = new RegExp(pattern, 'g');
+            let resultsFromDatabase = await database['report'].getTable({ [fields[index]]: regex });
+            
+            // If results from database are non-empty
+            // Get all _id of all reports
+            for (let position = 0; position < resultsFromDatabase.length; position++){
+                results.push(String(resultsFromDatabase[position]._id));
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    // Delete dumplicate elements in results
+    results = [...new Set(results)];
+
+    res.send(JSON.stringify(results));
+});
+
 // create report (base on the last result of each table)
 app.post("/create_report",async (req,res)=>{
     let data = {}
     let {url} = req.body
-    await database['dic'].getTable().then((result)=>{
-        data['dic'] = result
+
+    let token = req.body.token;
+    
+    await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['dic'] = JSON.stringify(result)
     })
 
-    await database['wapp'].getTable().then((result)=>{
-        data['wapp'] = result
+    await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['wapp'] = JSON.stringify(result)
     })
-    await database['domain'].getTable().then((result)=>{
-        data['domain'] = result
+    await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['domain'] = JSON.stringify(result)
     })
-    await database['dns'].getTable().then((result)=>{
-        data['dns'] = result
+    await database['dns'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['dns'] = JSON.stringify(result)
     })
-    await database['server'].getTable().then((result)=>{
-        data['server'] = result
+    await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['server'] = JSON.stringify(result)
     })
-    await database['netcraft'].getTable().then((result)=>{
-        data['netcraft'] = result
+    await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['netcraft'] = JSON.stringify(result)
     })
-    await database['largeio'].getTable().then((result)=>{
-        data['largeio'] = result
+    await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['largeio'] = JSON.stringify(result)
     })
     data['url'] = url
     await database['report'].add(data)
