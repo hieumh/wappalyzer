@@ -8,66 +8,82 @@ class databaseHandle{
     constructor(table,schema=undefined){
         this.schemaDefault = {
             'link':{
+                token: String,
                 url:String,
                 links:Array,
             },
             'dic':{
+                token: String,
                 url:String,
                 dic:String
             },
             'wapp':{
+                token: String,
                 url:String,
                 technologies: Array
             },
             'whatweb':{
+                token: String,
                 url:String, 
                 technologies: Array
             },
             'webtech':{
+                token: String,
                 url:String, 
                 technologies: Array
             },
             'whois':{
+                token: String,
                 url:String,
                 domains:Array
             },
             'sublist3r':{
+                token: String,
                 url:String,
                 domains:Array
             },
             'gobuster':{
+                token: String,
                 url:String,
                 gobuster:Array
             },
             'dns':{
+                token: String,
                 url:String,
                 dns:Array
             },
             'server':{
+                token: String,
                 url:String,
                 server:Array
             },
             'netcraft':{
+                token: String,
                 url:String,
                 technologies:Array
             },
             'largeio':{
+                token: String,
                 url:String,
                 technologies:Array
             },
             'wafw00f':{
+                token: String,
                 url:String,
                 waf:Array
             },
             'wpscan':{
+                token: String,
                 url:String,
                 wp:Array
             },
             'droopescan':{
+                token: String,
                 url:String,
                 droop:Array
             },
             'nikto':{
+                token: String,
                 url:String,
                 nikto:Array
             },

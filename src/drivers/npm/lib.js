@@ -1,12 +1,12 @@
 const request = require('async-request')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "database"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "cve-api"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "api-server"
 let portServerApi = "5000"
 
 // get dns information

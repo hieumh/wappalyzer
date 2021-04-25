@@ -86,7 +86,7 @@ Options:
     process.exit(1)
 };
 
-async function startWep(database, url,_options) {
+async function startWep(database, url, token, _options) {
     const options = commandAnalyzed(url,_options)
     const wappalyzer = await new Wappalyzer(options,database['link'], url)
     
@@ -100,6 +100,7 @@ async function startWep(database, url,_options) {
         const report = await addCve(results)
         // report.url = report.url.split("//")[1]
 
+        report['token'] = token;
         await database['wapp'].add(report)
 
 
