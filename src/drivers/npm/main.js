@@ -529,26 +529,26 @@ app.post("/create_report",async (req,res)=>{
 
     let token = req.body.token;
     
-    await database['dic'].getTable({token: token}).then((result)=>{
+    await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['dic'] = JSON.stringify(result)
     })
 
-    await database['wapp'].getTable({token: token}).then((result)=>{
+    await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['wapp'] = JSON.stringify(result)
     })
-    await database['whois'].getTable({token: token}).then((result)=>{
+    await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['domain'] = JSON.stringify(result)
     })
-    await database['dns'].getTable({token: token}).then((result)=>{
+    await database['dns'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['dns'] = JSON.stringify(result)
     })
-    await database['server'].getTable({token: token}).then((result)=>{
+    await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['server'] = JSON.stringify(result)
     })
-    await database['netcraft'].getTable({token: token}).then((result)=>{
+    await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['netcraft'] = JSON.stringify(result)
     })
-    await database['largeio'].getTable({token: token}).then((result)=>{
+    await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['largeio'] = JSON.stringify(result)
     })
     data['url'] = url
