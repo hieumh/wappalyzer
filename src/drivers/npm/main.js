@@ -251,7 +251,6 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     await database['gobuster'].add(data)
     res.send(JSON.stringify(data))
 })
-
 ///////////////////////////////////////////////////
 
 
@@ -421,13 +420,6 @@ app.get('/search/:target/:year', async (req,res)=>{
     let data = await search({target:target,year:year})
 
     res.send(JSON.stringify(data))
-})
-
-app.get("/url_analyze/:tool",async (req,res)=>{
-    const {tool} = req.params
-    const url = req.query.url
-
-    const result = await database[tool].findOne({url:url})
 })
 
 // create report (base on the last result of each table)

@@ -5,7 +5,7 @@ const { Schema } = mongoose
 
 
 class databaseHandle{
-    constructor(table,schema=undefined) {
+    constructor(table,schema=undefined){
         this.schemaDefault = {
             'link':{
                 url:String,
@@ -105,14 +105,14 @@ class databaseHandle{
             console.log(error)
         }
     }
-    connect() {
+    connect(){
         // connect to database
         this.db = mongoose.connect(`mongodb://${hostDatabase}:${portDatabase}/wappalyzer`, {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error=>{
             console.log(error)
         })
         //console.log("[*] connection successfully")
     }
-    disconnect() {
+    disconnect(){
         mongoose.connection.close(()=>{
             console.log("[*] close")
         })
@@ -124,15 +124,15 @@ class databaseHandle{
             console.log("Error:",error)
         }
     }
-    createModel() {
+    createModel(){
         // create model of the table
         try {
             this.modelTable = mongoose.model(this.table, this.mapSchema[this.table])
-        } catch (error) {
+        } catch (error){
             console.log(error)
         }
     }
-    checkExist(target) {
+    checkExist(target){
         return this.findOne(target)
     }
     async add(obj){
@@ -144,13 +144,13 @@ class databaseHandle{
             }
         })
     }
-    async findOne(target) {
+    async findOne(target){
         return await (this.modelTable.findOne(target)).exec()
     }
     async getTable(){
         return await this.modelTable.find({}).exec()
     }
-    async delete(target) {
+    async delete(target){
         // delete one function
         await this.modelTable.deleteOne(target, (err)=>{
             if (err) {
