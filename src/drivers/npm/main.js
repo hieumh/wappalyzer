@@ -7,7 +7,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const databaseHandle = require('./database')
 const addCve = require('./lib')
-const {search,createTree,getDns,getDomainSub,getDomainWhoIs,getServerInfor,getDicGobuster,getTechWhatWeb,getTechWebTech,getDWab,wpScan,droopScan,niktoScan,searchSploit} = require('./lib')
+const {search,createTree,getDns,getDomainSub,getDomainWhoIs,getServerInfor,getDicGobuster,getTechWhatWeb,getTechWebTech,getDWab,wpScan,droopScan,joomScan,niktoScan,searchSploit} = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
 
@@ -35,6 +35,7 @@ database['wafw00f'] = new databaseHandle('wafw00f')
 
 database['wpscan'] = new databaseHandle('wpscan')
 database['droopescan'] = new databaseHandle('droopescan')
+database['joomscan'] = new databaseHandle('joomscan')
 database['nikto'] = new databaseHandle('nikto')
 
 database['report'] = new databaseHandle('report')
@@ -91,13 +92,11 @@ app.post('/url_analyze/wapp',async (req,res) => {
     await startWep(database,url, token)
 
     // data saved in database, and get it from database
-    let data
-    await database['wapp'].findOne({url:url}).then((result)=>{
-        data = result
-    })
+    let data = await database['wapp'].findOne({url:url})
 
     // log here
-    res.send(JSON.stringify(data))
+    // res.send(JSON.stringify(data))
+    res.send(data)
 })
 
 app.post('/url_analyze/netcraft', async (req,res)=>{
@@ -139,7 +138,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
 
     let temp 
     let tech
-    if(!result.technologies){
+    if(JSON.stringify(result.technologies) === "[]"){
         tech = []
     } else {
         tech = result.technologies
@@ -166,11 +165,11 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     let result 
     await getTechWhatWeb(url).then(data=>{
-        result = data
+        result = JSON.parse(data)
     })
 
     let tech
-    if(!result.technologies){
+    if(JSON.stringify(result.technologies) === "[]"){
         tech = []
     } else {
         tech = result.technologies
@@ -197,11 +196,11 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 
     let result 
     await getTechWebTech(url).then(data=>{
-        result = data
+        result = JSON.parse(data)
     })
 
     let tech
-    if(!result.technologies){
+    if(JSON.stringify(result.technologies) === "[]"){
         tech = []
     } else {
         tech = result.technologies
@@ -217,7 +216,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     
     temp['token'] = token
 
-    await database['largeio'].add(temp)
+    await database['webtech'].add(temp)
     res.send(JSON.stringify(temp))
 })
 ////////////////////////////////////////////////////
@@ -268,7 +267,6 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 
     let temp
         await getDicGobuster(url).then(data=>{
-            console.log(data)
             if (data == "Wrong URL"){
                 temp = {}
             } else {
@@ -302,7 +300,6 @@ app.post('/url_analyze/dns',async (req,res)=>{
         dnsInfor= JSON.parse(data)
     })
 
-    console.log(dnsInfor);
 
     await database['dns'].add({
         url:url,
@@ -456,15 +453,30 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     res.send(JSON.stringify(droop))
 })
 
-app.post('/url_analyze/nikto', async (req,res)=>{
+app.post('/url_analyze/joomscan', async (req,res)=>{
     let {url} =  req.body
 
     let token = req.body.token;
+    console.log("joomscan here")
 
-    let nikto 
-    await niktoScan(url).then(data=>{
-        nikto=data
+    let joomscan 
+    await joomScan(url).then(data=>{
+        joomscan=data
     })
+
+    // console.log(`this is server infor ${serverInfor}`)
+    await database['joomscan'].add({
+        url:url,
+        joomscan:joomscan,
+        token: token
+    })
+    res.send(JSON.stringify(joomscan))
+})
+
+app.post('/url_analyze/nikto', async (req,res)=>{
+    let {url} =  req.body
+    let token = req.body.token;
+    let nikto = await niktoScan(url)
 
     // console.log(`this is server infor ${serverInfor}`)
     await database['nikto'].add({
@@ -472,7 +484,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
         nikto:nikto,
         token: token
     })
-    res.send(JSON.stringify(nikto))
+    res.send(nikto)
 })
 ///////////////////////////////////////////////////
 

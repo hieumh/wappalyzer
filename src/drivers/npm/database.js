@@ -82,6 +82,11 @@ class databaseHandle{
                 url:String,
                 droop:Array
             },
+            'joomscan':{
+                token: String,
+                url:String,
+                joomscan:Array
+            },
             'nikto':{
                 token: String,
                 url:String,

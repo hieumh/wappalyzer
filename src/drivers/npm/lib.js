@@ -1,12 +1,12 @@
 const request = require('async-request')
 
-let hostDatabase = "database"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "cve-api"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "api-server"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
 // get dns information
@@ -44,6 +44,7 @@ async function getDicGobuster(url){
 
 // get technologies of website with whatweb
 async function getTechWhatWeb(url){
+    console.log(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`);
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`)
     return result.body
 }
@@ -72,15 +73,18 @@ async function wpScan(url){
     return result.body
 }
 
+async function joomScan(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/joomscan?url=${url}`)
+    return result.body
+}
+
 async function droopScan(url){
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/droopescan?url=${url}`)
     return result.body
 }
 
 async function niktoScan(url){
-    console.log(`hello world http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nikto?url=${url}`)
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nikto?url=${url}`)
-    console.log(result)
 
     return result.body
 }
@@ -177,6 +181,7 @@ module.exports.getDWab = getDWab
 module.exports.wpScan = wpScan
 module.exports.droopScan = droopScan
 module.exports.niktoScan = niktoScan
+module.exports.joomScan = joomScan
 module.exports.searchsploit = searchsploit
 
 module.exports.hostDatabase = hostDatabase
