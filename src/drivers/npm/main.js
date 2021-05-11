@@ -99,12 +99,12 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     // Get token from request
     let token = req.body.token;
 
-    let result = await netcraft.netcraft(url)
-    result = JSON.parse(result)
+    let dataRecv = await netcraft.netcraft(url)
+    dataRecv = JSON.parse(dataRecv)
     
     let dataSend = await addCve({
         url:url,
-        technologies:result.technologies
+        technologies:dataRecv.technologies
     })
 
     // Add token to result
@@ -239,10 +239,10 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     let token = req.body.token;
 
     let dataRecv = await getDicGobuster(url)
-    if (data == "Wrong URL"){
+    if (dataRecv == "Wrong URL"){
         dataRecv = {}
     }
-    dataRecv = JSON.parse(data)
+    dataRecv = JSON.parse(dataRecv)
 
     // add to database
     let dataSend = {
