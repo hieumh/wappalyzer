@@ -15,7 +15,7 @@ class databaseHandle{
             'dic':{
                 token: String,
                 url:String,
-                dic:String
+                dic:Object
             },
             'wapp':{
                 token: String,
@@ -94,14 +94,25 @@ class databaseHandle{
             },
             'report':{
                 url:String,
-                domain:String,
-                dic:String,
-                dns:String,
-                gobuster:String,
-                server:String,
-                netcraft:String,
-                largeio:String,
-                wapp:String
+                domain:Object,
+                dic:Object,
+                dns:Object,
+                gobuster:Object,
+                server:Object,
+                netcraft:Object,
+                largeio:Object,
+                wapp:Object,
+                whatweb:Object,
+                webtech:Object,
+                whois:Object,
+                sublist3r:Object,
+                wafw00f:Object,
+                wpscan:Object,
+                droopescan:Object,
+                joomscan:Object,
+                nikto:Object,
+                time_create:String
+
             }
         }
         this.mapSchema = {}
@@ -169,6 +180,7 @@ class databaseHandle{
         return await (this.modelTable.findOne(target)).exec()
     }
     async getTable(condition, exclusion){
+        // to get all row in table condition={}, exclusion={_id}
         return await this.modelTable.find(condition, exclusion).exec()
     }
     async delete(target){

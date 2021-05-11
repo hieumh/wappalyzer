@@ -74,11 +74,8 @@ app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
     let {url} = req.query
 
-    let result 
-    await database[tool].findOne({url:url}).then(data =>{
-        result = data
-    })
-    res.send(JSON.stringify(result))
+    let result = await database[tool].findOne({url:url})
+    res.send(result)
 })
 
 ///////////////////////////////////////////////////////////////
@@ -92,11 +89,8 @@ app.post('/url_analyze/wapp',async (req,res) => {
     await startWep(database,url, token)
 
     // data saved in database, and get it from database
-    let data = await database['wapp'].findOne({url:url})
-
-    // log here
-    // res.send(JSON.stringify(data))
-    res.send(data)
+    let dataSend = await database['wapp'].findOne({token:token})
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/netcraft', async (req,res)=>{
@@ -105,24 +99,18 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     // Get token from request
     let token = req.body.token;
 
-    let result 
-    await netcraft.netcraft(url).then(data=>{
-        result = JSON.parse(data)
-    })
-
-    let temp
-    await addCve({
+    let result = await netcraft.netcraft(url)
+    result = JSON.parse(result)
+    
+    let dataSend = await addCve({
         url:url,
         technologies:result.technologies
-    }).then(data=>{
-        temp = data
     })
 
     // Add token to result
-    temp['token'] = token
-    
-    await database['netcraft'].add(temp)
-    res.send(JSON.stringify(temp))
+    dataSend['token'] = token
+    await database['netcraft'].add(dataSend)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/largeio', async (req,res)=>{
@@ -131,31 +119,26 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     // Get token from request
     let token = req.body.token;
 
-    let result 
-    await largeio.largeio(url).then(data=>{
-        result = JSON.parse(data)
-    })
+    let dataRecv = await largeio.largeio(url)
+    dataRecv = JSON.parse(dataRecv)
 
-    let temp 
     let tech
-    if(JSON.stringify(result.technologies) === "[]"){
+    if(JSON.stringify(dataRecv.technologies) === "[]"){
         tech = []
     } else {
-        tech = result.technologies
+        tech = dataRecv.technologies
     }
 
-    await addCve({
+    let dataSend = await addCve({
         url:url,
         technologies:tech
-    }).then(data=>{
-        temp =data
     })
     
     // Add token to result
-    temp['token'] = token
+    dataSend['token'] = token
     
-    await database['largeio'].add(temp)
-    res.send(JSON.stringify(temp))
+    await database['largeio'].add(dataSend)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/whatweb', async (req,res)=>{
@@ -163,30 +146,25 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     let token = req.body.token;
 
-    let result 
-    await getTechWhatWeb(url).then(data=>{
-        result = JSON.parse(data)
-    })
+    let dataRecv = await getTechWhatWeb(url)
+    dataRecv = JSON.parse(dataRecv)
 
     let tech
-    if(JSON.stringify(result.technologies) === "[]"){
+    if(JSON.stringify(dataRecv.technologies) === "[]"){
         tech = []
     } else {
-        tech = result.technologies
+        tech = dataRecv.technologies
     }
 
-    let temp
-    await addCve({
+    let dataSend = await addCve({
         url:url,
         technologies:tech
-    }).then(data=>{
-        temp =data
     })
     
-    temp['token'] = token
+    dataSend['token'] = token
     
-    await database['whatweb'].add(temp)
-    res.send(JSON.stringify(temp))
+    await database['whatweb'].add(dataSend)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/webtech', async (req,res)=>{
@@ -194,30 +172,25 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 
     let token = req.body.token;
 
-    let result 
-    await getTechWebTech(url).then(data=>{
-        result = JSON.parse(data)
-    })
+    let dataRecv = await getTechWebTech(url)
+    dataRecv = JSON.parse(dataRecv)
 
     let tech
-    if(JSON.stringify(result.technologies) === "[]"){
+    if(JSON.stringify(dataRecv.technologies) === "[]"){
         tech = []
     } else {
-        tech = result.technologies
+        tech = dataRecv.technologies
     }
 
-    let temp
-    await addCve({
+    let dataSend = await addCve({
         url:url,
         technologies:tech
-    }).then(data=>{
-        temp =data
     })
     
-    temp['token'] = token
+    dataSend['token'] = token
 
-    await database['webtech'].add(temp)
-    res.send(JSON.stringify(temp))
+    await database['webtech'].add(dataSend)
+    res.send(dataSend)
 })
 ////////////////////////////////////////////////////
 
@@ -252,11 +225,11 @@ app.post('/url_analyze/dic',async (req,res)=>{
     delete Object.assign(tree, {["/"]: tree[""] })[""];
     await database['dic'].add({
         url:url,
-        dic:JSON.stringify(tree),
+        dic:tree,
         token: token
     })
 
-    res.send(JSON.stringify(tree))
+    res.send(tree)
 })
 
 
@@ -265,23 +238,20 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 
     let token = req.body.token;
 
-    let temp
-        await getDicGobuster(url).then(data=>{
-            if (data == "Wrong URL"){
-                temp = {}
-            } else {
-                temp = JSON.parse(data)
-            }
-        })
+    let dataRecv = await getDicGobuster(url)
+    if (data == "Wrong URL"){
+        dataRecv = {}
+    }
+    dataRecv = JSON.parse(data)
 
     // add to database
-    let data = {
+    let dataSend = {
         url:url,
-        gobuster:temp,
+        gobuster:dataRecv,
         token: token
     }
-    await database['gobuster'].add(data)
-    res.send(JSON.stringify(data))
+    await database['gobuster'].add(dataSend)
+    res.send(dataSend)
 })
 ///////////////////////////////////////////////////
 
@@ -295,10 +265,8 @@ app.post('/url_analyze/dns',async (req,res)=>{
     
     let token = req.body.token;
 
-    let dnsInfor 
-    await getDns(url).then(data=>{
-        dnsInfor= JSON.parse(data)
-    })
+    let dnsInfor = await getDns(url)
+    dnsInfor= JSON.parse(dnsInfor)
 
 
     await database['dns'].add({
@@ -306,7 +274,7 @@ app.post('/url_analyze/dns',async (req,res)=>{
         dns:dnsInfor,
         token: token
     })
-    res.send(JSON.stringify(dnsInfor))
+    res.send(dnsInfor)
 })
 ///////////////////////////////////////////////////
 
@@ -320,10 +288,9 @@ app.post('/url_analyze/whois', async (req,res)=>{
 
     let token = req.body.token;
 
-    let domainInfor 
-    await getDomainWhoIs(url).then(data=>{
-        domainInfor = JSON.parse(data)
-    })
+    let domainInfor = await getDomainWhoIs(url)
+    domainInfor = JSON.parse(domainInfor)
+
 
     let keys = Object.keys(domainInfor)
     for(let key of keys){
@@ -337,7 +304,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
         domains:domainInfor,
         token: token
     })
-    res.send(JSON.stringify(domainInfor))
+    res.send(domainInfor)
 })
 
 app.post('/url_analyze/sublist3r', async (req,res)=>{
@@ -345,17 +312,15 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
 
     let token = req.body.token;
 
-    let domainInfor 
-    await getDomainSub(url).then(data=>{
-        domainInfor = JSON.parse(data)
-    })
+    let domainInfor = await getDomainSub(url)
+    domainInfor = JSON.parse(domainInfor)
 
     await database['sublist3r'].add({
         url:url,
         domains:domainInfor,
         token: token
     })
-    res.send(JSON.stringify(domainInfor))
+    res.send(domainInfor)
 })
 /////////////////////////////////////////////////////
 
@@ -369,18 +334,14 @@ app.post('/url_analyze/server', async (req,res)=>{
 
     let token = req.body.token;
 
-    let serverInfor 
-    await getServerInfor(url).then(data=>{
-        serverInfor=data
-    })
+    let serverInfor = await getServerInfor(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['server'].add({
         url:url,
         server:serverInfor,
         token: token
     })
-    res.send(JSON.stringify(serverInfor))
+    res.send(serverInfor)
 })
 /////////////////////////////////////////////////////
 
@@ -394,18 +355,14 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
 
     let token = req.body.token;
 
-    let detectWaf 
-    await getDWab(url).then(data=>{
-        detectWaf=data
-    })
+    let detectWaf = await getDWab(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['wafw00f'].add({
         url:url,
         waf:detectWaf,
         token: token
     })
-    res.send(JSON.stringify(detectWaf))
+    res.send(detectWaf)
 })
 ///////////////////////////////////////////////////
 
@@ -420,18 +377,14 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
 
     let token = req.body.token;
 
-    let wp 
-    await wpScan(url).then(data=>{
-        wp=data
-    })
+    let wp = await wpScan(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['wpscan'].add({
         url:url,
         wp:wp,
         token: token
     })
-    res.send(JSON.stringify(wp))
+    res.send(wp)
 })
 
 app.post('/url_analyze/droopescan', async (req,res)=>{
@@ -439,46 +392,37 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     let token = req.body.token;
 
-    let droop 
-    await droopScan(url).then(data=>{
-        droop=data
-    })
+    let droop = await droopScan(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['droopescan'].add({
         url:url,
         droop:droop,
         token: token
     })
-    res.send(JSON.stringify(droop))
+    res.send(droop)
 })
 
 app.post('/url_analyze/joomscan', async (req,res)=>{
     let {url} =  req.body
 
     let token = req.body.token;
-    console.log("joomscan here")
 
-    let joomscan 
-    await joomScan(url).then(data=>{
-        joomscan=data
-    })
+    let joomscan = await joomScan(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['joomscan'].add({
         url:url,
         joomscan:joomscan,
         token: token
     })
-    res.send(JSON.stringify(joomscan))
+    res.send(joomscan)
 })
 
 app.post('/url_analyze/nikto', async (req,res)=>{
     let {url} =  req.body
     let token = req.body.token;
+
     let nikto = await niktoScan(url)
 
-    // console.log(`this is server infor ${serverInfor}`)
     await database['nikto'].add({
         url:url,
         nikto:nikto,
@@ -489,28 +433,26 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 ///////////////////////////////////////////////////
 
 
-
+////////////////////////////////////////////////////
+app.get('/history', async (req,res)=>{
+    let dataSend = await database['report'].getTable({})
+    res.send(dataSend)
+})
+////////////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////////////////////
-app.get('/search/:target/:year', async (req,res)=>{
-    const {target, year} = req.params
-    let data = await search({target:target,year:year})
-
-    res.send(JSON.stringify(data))
-})
-
-app.get('/searchDatabase', async (req, res) => {
-    let fields = ['url', 'domain', 'dic','dns','gobuster','server','netcraft','largeio','wapp'];
-
+app.get('/search_database', async (req, res) => {
+    let fields = ['url', 'domain', 'dic','dns','gobuster','server','netcraft','largeio','wapp']
+    
     // Pre-process pattern
-    let pattern = req.query.pattern;
+    let pattern = req.query.pattern
 
     // Find all spaces and replace them with "|"
     let regex = new RegExp('\\s', 'g');
-    pattern = `(${pattern.replaceAll(regex, '|')})`;
+    pattern = `(${pattern.replaceAll(regex, '|')})`
 
-    let results = [];
+    let results = []
 
     for (let index = 0; index < fields.length; index++) {
         try {
@@ -520,49 +462,83 @@ app.get('/searchDatabase', async (req, res) => {
             // If results from database are non-empty
             // Get all _id of all reports
             for (let position = 0; position < resultsFromDatabase.length; position++){
-                results.push(String(resultsFromDatabase[position]._id));
+                results.push(String(resultsFromDatabase[position]._id))
             }
 
         } catch (err) {
-            console.log(err);
+            console.log(err)
         }
     }
     // Delete dumplicate elements in results
-    results = [...new Set(results)];
+    results = [...new Set(results)]
 
-    res.send(JSON.stringify(results));
+    res.send(results)
 });
 
 // create report (base on the last result of each table)
 app.post("/create_report",async (req,res)=>{
     let data = {}
-    let {url} = req.body
-
-    let token = req.body.token;
-    
-    await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['dic'] = JSON.stringify(result)
-    })
+    let url = req.body.url
+    let token = req.body.token
 
     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wapp'] = JSON.stringify(result)
+        data['wapp'] = result[0] ? result[0] : ""
     })
-    await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['domain'] = JSON.stringify(result)
+    await database['whatweb'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['whatweb'] = result[0] ? result[0] : ""
     })
-    await database['dns'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['dns'] = JSON.stringify(result)
-    })
-    await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['server'] = JSON.stringify(result)
+    await database['webtech'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['webtech'] = result[0] ? result[0] : ""
     })
     await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['netcraft'] = JSON.stringify(result)
+        data['netcraft'] = result[0] ? result[0] : ""
     })
     await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['largeio'] = JSON.stringify(result)
+        data['largeio'] = result[0] ? result[0] : ""
+    })
+    
+    await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['dic'] = result[0] ? result[0] : ""
+    })
+    await database['gobuster'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['gobuster'] = result[0] ? result[0] : ""
+    })
+
+    await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['domain'] = result[0] ? result[0] : ""
+    })
+    await database['sublist3r'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['sublist3r'] = result[0] ? result[0] : ""
+    })
+
+
+    await database['dns'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['dns'] = result[0] ? result[0] : ""
+    })
+
+    await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['server'] = result[0] ? result[0] : ""
+    })
+    
+    await database['wafw00f'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['wafw00f'] = result[0] ? result[0] : ""
+    })
+
+    await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['wpscan'] = result[0] ? result[0] : ""
+    })
+    await database['droopescan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['droopescan'] = result[0] ? result[0] : ""
+    })
+    await database['joomscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['joomscan'] = result[0] ? result[0] : ""
+    })
+    await database['nikto'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['nikto'] = result[0] ? result[0] : ""
     })
     data['url'] = url
+    let time = new Date()
+    data['time_create'] =  time.toLocaleTimeString() + " " + time.toLocaleDateString()
     await database['report'].add(data)
 
     res.send("create database success")
@@ -585,16 +561,6 @@ app.get('/report', async (req,res)=>{
 
     res.send(JSON.stringify(data))
 })
-
-// get last report
-app.get('/last_report', async (req,res)=>{
-    let data
-    await database['wapp'].getTable().then((result)=>{
-        data = result
-    })
-    res.send(JSON.stringify(data[data.length-1]))
-})
-
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000")
