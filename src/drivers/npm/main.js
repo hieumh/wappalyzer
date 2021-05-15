@@ -123,12 +123,12 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     dataRecv = JSON.parse(dataRecv)
 
     let tech
-    if(JSON.stringify(dataRecv.technologies) === "[]"){
-        tech = []
+    if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
+        tech = []   
     } else {
         tech = dataRecv.technologies
     }
-
+    console.log("this is tech in largeio backend:",tech)
     let dataSend = await addCve({
         url:url,
         technologies:tech
@@ -150,7 +150,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     dataRecv = JSON.parse(dataRecv)
 
     let tech
-    if(JSON.stringify(dataRecv.technologies) === "[]"){
+    if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
         tech = []
     } else {
         tech = dataRecv.technologies
@@ -176,7 +176,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     dataRecv = JSON.parse(dataRecv)
 
     let tech
-    if(JSON.stringify(dataRecv.technologies) === "[]"){
+    if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
         tech = []
     } else {
         tech = dataRecv.technologies
