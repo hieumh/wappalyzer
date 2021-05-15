@@ -1,12 +1,13 @@
 const request = require('async-request')
+const { technologies } = require('./wappalyzer')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "database"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "cve-api"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "api-server"
 let portServerApi = "5000"
 
 // get dns information
@@ -118,6 +119,26 @@ async function addCve(data){
     return temp
 }
 
+// Get Vulns from ExploitDB for each technologies which detected by Wappalyzer
+async function getVulnsFromExploitDB(data) {
+    vulns = []
+
+    if (data.technologies == undefined) {
+        return [];
+
+    } else {
+        for (let index = 0; index < data.technologies.length; index++) {
+            console.log(data.technologies[index].version); 
+            if (data.technologies[index].version !== null) {
+                let results = await searchsploit(data.technologies[index].name + ' ' + data.technologies[index].version);
+                results = JSON.parse(results);
+                vulns.push(results['RESULTS_EXPLOIT'])
+            }
+        }
+    }
+    return vulns;
+}
+
 function handleLink(str){
     let lastPos=-1
     if (str == undefined){
@@ -166,6 +187,8 @@ function createTree(arr){
 
 
 module.exports = addCve
+module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
+
 module.exports.search = search
 module.exports.treeParse = treeParse
 module.exports.handleLink = handleLink
