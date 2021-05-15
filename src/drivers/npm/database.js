@@ -20,7 +20,8 @@ class databaseHandle{
             'wapp':{
                 token: String,
                 url:String,
-                technologies: Array
+                technologies: Array,
+                vulns: Array
             },
             'whatweb':{
                 token: String,
