@@ -1,23 +1,33 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 
-let hostDatabase = "database"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "cve-api"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "api-server"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
+async function checkCms(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/cmseek?url=${url}`)
+    return result.body
+}
+
 // get dns information
-async function getDns(url){
+async function getDnsDig(url){
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
     
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
+    return result.body
+}
+
+async function getDnsFierce(url){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/fierce?url=${url}`)
     return result.body
 }
 
@@ -139,6 +149,10 @@ async function getVulnsFromExploitDB(data) {
     return vulns;
 }
 
+function createFile(jsonInput){
+
+}
+
 function handleLink(str){
     let lastPos=-1
     if (str == undefined){
@@ -193,7 +207,8 @@ module.exports.search = search
 module.exports.treeParse = treeParse
 module.exports.handleLink = handleLink
 module.exports.createTree = createTree
-module.exports.getDns = getDns
+module.exports.getDnsDig = getDnsDig
+module.exports.getDnsFierce = getDnsFierce
 module.exports.getDomainSub = getDomainSub
 module.exports.getDomainWhoIs = getDomainWhoIs
 module.exports.getServerInfor = getServerInfor
@@ -206,6 +221,8 @@ module.exports.droopScan = droopScan
 module.exports.niktoScan = niktoScan
 module.exports.joomScan = joomScan
 module.exports.searchsploit = searchsploit
+module.exports.createFile = createFile
+module.exports.checkCms = checkCms
 
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase

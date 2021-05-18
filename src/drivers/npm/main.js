@@ -7,7 +7,25 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const databaseHandle = require('./database')
 const addCve = require('./lib')
-const {search,createTree,getDns,getDomainSub,getDomainWhoIs,getServerInfor,getDicGobuster,getTechWhatWeb,getTechWebTech,getDWab,wpScan,droopScan,joomScan,niktoScan,searchSploit} = require('./lib')
+const {search,
+    createFile,
+    createTree,
+    getDnsDig,
+    getDnsFierce,
+    getDomainSub,
+    getDomainWhoIs,
+    getServerInfor,
+    getDicGobuster,
+    getTechWhatWeb,
+    getTechWebTech,
+    getDWab,
+    wpScan,
+    droopScan,
+    joomScan,
+    niktoScan,
+    checkCms,
+    searchSploit
+} = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
 
@@ -28,7 +46,9 @@ database['gobuster'] = new databaseHandle('gobuster')
 database['whois'] = new databaseHandle('whois')
 database['sublist3r'] = new databaseHandle('sublist3r')
 
-database['dns'] = new databaseHandle('dns')
+database['dig'] = new databaseHandle('dig')
+database['fierce'] = new databaseHandle('fierce')
+
 database['server'] = new databaseHandle('server')
 
 database['wafw00f'] = new databaseHandle('wafw00f')
@@ -78,9 +98,25 @@ app.get("/url_analyze/:tool",async (req,res)=>{
     res.send(result)
 })
 
+// test cms technologies
+app.post("/url_analyze/cmseek",async (req,res)=>{
+    let {url} = req.body
+
+    try {
+        let result = await checkCms(url)
+        result = JSON.parse(result)
+
+        res.send(result)
+    } catch(err){
+        console.log(err)
+        res.status(500)
+        res.send(err)
+    }
+})
+
 ///////////////////////////////////////////////////////////////
 // analyze technologies for url
-app.post('/url_analyze/wapp',async (req,res) => {
+app.post('/url_analyze/wapp',async (req,res)=>{
     let {url} = req.body
 
     let token = req.body.token;
@@ -147,7 +183,12 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     let token = req.body.token;
 
     let dataRecv = await getTechWhatWeb(url)
-    dataRecv = JSON.parse(dataRecv)
+    try {
+        dataRecv = JSON.parse(dataRecv)
+    } catch (err){
+        console.log(err)
+    }
+    
 
     let tech
     if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
@@ -173,7 +214,11 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     let token = req.body.token;
 
     let dataRecv = await getTechWebTech(url)
-    dataRecv = JSON.parse(dataRecv)
+    try {
+        dataRecv = JSON.parse(dataRecv)
+    } catch (err){
+        console.log(err)
+    }
 
     let tech
     if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
@@ -205,10 +250,7 @@ app.post('/url_analyze/dic',async (req,res)=>{
     let token = req.body.token;
 
     // get link from database
-    let result
-    await database['link'].findOne({url:url}).then((data)=>{
-        result = data
-    })
+    let result = await database['link'].findOne({url:url})
 
     let arr = []
     let hostname = url.split("//")[1]
@@ -242,7 +284,11 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     if (dataRecv == "Wrong URL"){
         dataRecv = {}
     }
-    dataRecv = JSON.parse(dataRecv)
+    try {
+        dataRecv = JSON.parse(dataRecv)
+    } catch (err){
+        console.log(err)
+    }
 
     // add to database
     let dataSend = {
@@ -260,21 +306,36 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 
 ///////////////////////////////////////////////////
 // analyze dns information 
-app.post('/url_analyze/dns',async (req,res)=>{
-    let {url} = req.body
-    
-    let token = req.body.token;
+app.post('/url_analyze/dig',async (req,res)=>{
+    let {url,token} = req.body
 
-    let dnsInfor = await getDns(url)
-    dnsInfor= JSON.parse(dnsInfor)
+    let dnsInfor = await getDnsDig(url)
+    try {
+        dnsInfor = JSON.parse(dnsInfor)
+    } catch (err){
+        console.log(err)
+    }
 
 
-    await database['dns'].add({
+    await database['dig'].add({
         url:url,
         dns:dnsInfor,
         token: token
     })
     res.send(dnsInfor)
+})
+
+app.post('/url_analyze/fierce', async (req,res)=>{
+    let {url,token} = req.body
+
+    let dnsInfor = await getDnsFierce(url)
+
+    await database['fierce'].add({
+        url:url,
+        dns:dnsInfor,
+        token: token
+    })
+    res.send({"fierce":dnsInfor})
 })
 ///////////////////////////////////////////////////
 
@@ -289,7 +350,11 @@ app.post('/url_analyze/whois', async (req,res)=>{
     let token = req.body.token;
 
     let domainInfor = await getDomainWhoIs(url)
-    domainInfor = JSON.parse(domainInfor)
+    try {
+        domainInfor = JSON.parse(domainInfor)
+    } catch (err){
+        console.log(err)
+    }
 
 
     let keys = Object.keys(domainInfor)
@@ -313,7 +378,11 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
     let token = req.body.token;
 
     let domainInfor = await getDomainSub(url)
-    domainInfor = JSON.parse(domainInfor)
+    try {
+        domainInfor = JSON.parse(domainInfor)
+    } catch (err){
+        console.log(err)
+    }
 
     await database['sublist3r'].add({
         url:url,
@@ -356,10 +425,35 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     let token = req.body.token;
 
     let detectWaf = await getDWab(url)
+    try {
+        detectWaf = JSON.parse(detectWaf)
+    } catch(err){
+        console.log(err)
+    }
 
     await database['wafw00f'].add({
         url:url,
-        waf:detectWaf,
+        waf:detectWaf.wafs,
+        token: token
+    })
+    res.send(detectWaf)
+})
+
+app.post('/url_analyze/wafw00f', async (req,res)=>{
+    let {url} =  req.body
+
+    let token = req.body.token;
+
+    let detectWaf = await getDWab(url)
+    try {
+        detectWaf = JSON.parse(detectWaf)
+    } catch(err){
+        console.log(err)
+    }
+
+    await database['wafw00f'].add({
+        url:url,
+        waf:detectWaf.wafs,
         token: token
     })
     res.send(detectWaf)
@@ -512,7 +606,10 @@ app.post("/create_report",async (req,res)=>{
     })
 
 
-    await database['dns'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+    await database['dig'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        data['dns'] = result[0] ? result[0] : ""
+    })
+    await database['fierce'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['dns'] = result[0] ? result[0] : ""
     })
 
@@ -538,28 +635,22 @@ app.post("/create_report",async (req,res)=>{
     })
     data['url'] = url
     let time = new Date()
-    data['time_create'] =  time.toLocaleTimeString() + " " + time.toLocaleDateString()
+    data['time_create'] =  time
     await database['report'].add(data)
 
     res.send("create database success")
 })
 
-// get specified report
-app.get('/report/:id', async (req,res)=>{
-    const {id} = req.params
+app.get('/create_file', async (req,res)=>{
+    let {time} = req.params
+    let reportJson = await database['report'].findOne({time_create:time})
 
-    const result = await database['report'].findOne({'_id':id})
-    res.send(JSON.stringify(result))
-})
-
-// get all report
-app.get('/report', async (req,res)=>{
-    let data
-    await database['report'].getTable().then((result)=>{
-        data = result
-    })
-
-    res.send(JSON.stringify(data))
+    let createStatus = await createFile(reportJson)
+    if(createStatus){
+        res.sendFile("/report.html")
+    } else {
+        res.send("Error")
+    }
 })
 
 app.listen(3000, () => {

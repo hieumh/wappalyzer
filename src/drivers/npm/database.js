@@ -48,10 +48,15 @@ class databaseHandle{
                 url:String,
                 gobuster:Array
             },
-            'dns':{
+            'dig':{
                 token: String,
                 url:String,
                 dns:Array
+            },
+            'fierce':{
+                token: String,
+                url:String,
+                dns:String
             },
             'server':{
                 token: String,
@@ -97,7 +102,8 @@ class databaseHandle{
                 url:String,
                 domain:Object,
                 dic:Object,
-                dns:Object,
+                dig:Object,
+                fierce:Object,
                 gobuster:Object,
                 server:Object,
                 netcraft:Object,
