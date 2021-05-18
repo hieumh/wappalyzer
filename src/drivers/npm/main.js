@@ -537,36 +537,51 @@ app.get('/history', async (req,res)=>{
 
 //////////////////////////////////////////////////////////////////
 app.get('/search_database', async (req, res) => {
-    let fields = ['url', 'domain', 'dic','dns','gobuster','server','netcraft','largeio','wapp']
+    let fields = ['url','wapp', 'whatweb', 'webtech', 'dic', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'domain', 'nikto', 'dns','gobuster', 'domain', 'server','netcraft','largeio'];
     
     // Pre-process pattern
-    let pattern = req.query.pattern
+    let pattern = req.query.pattern;
+    if (!pattern) {
+        res.send([]);
+    } else {
 
-    // Find all spaces and replace them with "|"
-    let regex = new RegExp('\\s', 'g');
-    pattern = `(${pattern.replaceAll(regex, '|')})`
+        // Delete all begining and ending space
+        pattern = pattern.trim();
+        if (pattern === '') {
+            res.send([]);
+        } else {
+            // Find all spaces in pattern parameter and replace them with "|"
+            let regex = new RegExp('\\s+', 'g');
+            pattern = `(${pattern.replaceAll(regex, '|')})`
 
-    let results = []
+            console.log(pattern);
+            // Return _id to front-end
+            let results = [];
 
-    for (let index = 0; index < fields.length; index++) {
-        try {
-            regex = new RegExp(pattern, 'g');
-            let resultsFromDatabase = await database['report'].getTable({ [fields[index]]: regex });
-            
-            // If results from database are non-empty
-            // Get all _id of all reports
-            for (let position = 0; position < resultsFromDatabase.length; position++){
-                results.push(String(resultsFromDatabase[position]._id))
+            // Get all reports from databases
+            let allReportsFromDatabase = await database['report'].getTable({});
+
+            for (let index = 0; index < allReportsFromDatabase.length; index++) {
+
+                for (let field in fields) {
+
+                    // Convert content of each field to string for searching
+                    let fieldContent = JSON.stringify(allReportsFromDatabase[index][fields[field]]);
+                    
+                    regex = new RegExp(pattern, 'g');
+                    let searchResult = fieldContent.search(regex);
+                    if (searchResult.length !== -1){
+                        results.push(allReportsFromDatabase[index]._id);
+                    }
+                }
             }
 
-        } catch (err) {
-            console.log(err)
+            // Delete dumplicate elements in results
+            results = [...new Set(results)]
+            res.send(results);
         }
+        
     }
-    // Delete dumplicate elements in results
-    results = [...new Set(results)]
-
-    res.send(results)
 });
 
 // create report (base on the last result of each table)
