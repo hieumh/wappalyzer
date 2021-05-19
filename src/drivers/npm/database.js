@@ -26,12 +26,14 @@ class databaseHandle{
             'whatweb':{
                 token: String,
                 url:String, 
-                technologies: Array
+                technologies: Array,
+                vulns: Array
             },
             'webtech':{
                 token: String,
                 url:String, 
-                technologies: Array
+                technologies: Array,
+                vulns: Array
             },
             'whois':{
                 token: String,
@@ -61,17 +63,20 @@ class databaseHandle{
             'server':{
                 token: String,
                 url:String,
-                server:Array
+                server:Array,
+                vulns: Array
             },
             'netcraft':{
                 token: String,
                 url:String,
-                technologies:Array
+                technologies:Array,
+                vulns: Array
             },
             'largeio':{
                 token: String,
                 url:String,
-                technologies:Array
+                technologies:Array,
+                vulns: Array
             },
             'wafw00f':{
                 token: String,
@@ -81,22 +86,26 @@ class databaseHandle{
             'wpscan':{
                 token: String,
                 url:String,
-                wp:Array
+                wp:Array,
+                vulns: Array
             },
             'droopescan':{
                 token: String,
                 url:String,
-                droop:Array
+                droop:Array,
+                vulns: Array
             },
             'joomscan':{
                 token: String,
                 url:String,
-                joomscan:Array
+                joomscan:Array,
+                vulns: Array
             },
             'nikto':{
                 token: String,
                 url:String,
-                nikto:Array
+                nikto:Array,
+                vulns: Array
             },
             'report':{
                 url:String,
@@ -118,6 +127,7 @@ class databaseHandle{
                 droopescan:Object,
                 joomscan:Object,
                 nikto:Object,
+                vulns: Object,
                 time_create:String
 
             }

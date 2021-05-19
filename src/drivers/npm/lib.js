@@ -1,13 +1,13 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 async function checkCms(url){
@@ -133,19 +133,55 @@ async function addCve(data){
 async function getVulnsFromExploitDB(data) {
     vulns = []
 
-    if (data.technologies == undefined) {
+    if (data.technologies === undefined) {
         return [];
 
     } else {
         for (let index = 0; index < data.technologies.length; index++) {
-            console.log(data.technologies[index].version); 
-            if (data.technologies[index].version !== null) {
+            if (data.technologies[index].version !== null && data.technologies[index].version !== "") {
+                console.log(data.technologies[index].name);
                 let results = await searchsploit(data.technologies[index].name + ' ' + data.technologies[index].version);
                 results = JSON.parse(results);
-                vulns.push(results['RESULTS_EXPLOIT'])
+                vulns = vulns.concat(results['RESULTS_EXPLOIT'])
             }
         }
     }
+    return vulns;
+}
+
+// Get vulns for netcraft tool
+async function getVulnsForNetcraft(data) {
+    vulns = [];
+
+    if (data.technologies == undefined && data['hosting history'] == undefined) {
+        return [];
+
+    } else {
+        if (data['hosting history'] !== undefined) {
+            try {
+                let webServerTechs = data['hosting history'][0]['web server'].split(' ');
+                for (let index = 0; index < webServerTechs.length; index++) {
+                    regex = new RegExp('\/');
+                    if (webServerTechs[index].search(regex) !== -1){
+
+                        // Split to get tech and version
+                        elements = webServerTechs[index].split('/');
+
+                        let results = await searchsploit(elements[0] + ' ' + elements[1]);
+                        results = JSON.parse(results);
+                        vulns = vulns.concat(results['RESULTS_EXPLOIT']);
+                    }
+                }
+            } catch {
+                return [];
+            }
+        }
+
+        if (data.technologies !== undefined) {
+            vulns = vulns.concat([]);
+        }
+    }
+
     return vulns;
 }
 
@@ -202,6 +238,7 @@ function createTree(arr){
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
+module.exports.getVulnsForNetcraft = getVulnsForNetcraft
 
 module.exports.search = search
 module.exports.treeParse = treeParse
