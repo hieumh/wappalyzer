@@ -8,6 +8,8 @@ const bodyParser = require('body-parser')
 const databaseHandle = require('./database')
 const addCve = require('./lib')
 const {search,
+    getVulnsForNetcraft,
+    getVulnsFromExploitDB,
     createFile,
     createTree,
     getDnsDig,
@@ -31,6 +33,7 @@ const largeio = require("./tools/largeio/largeio")
 
 // Add uuidv
 const uuidv4 = require('uuid')
+const { ServerResponse } = require('http')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
@@ -137,7 +140,7 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
     let dataRecv = await netcraft.netcraft(url)
     dataRecv = JSON.parse(dataRecv)
-    
+
     let dataSend = await addCve({
         url:url,
         technologies:dataRecv.technologies
@@ -145,6 +148,10 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
     // Add token to result
     dataSend['token'] = token
+
+    // Add vulns to result
+    dataSend['vulns'] = await getVulnsForNetcraft(dataRecv);
+
     await database['netcraft'].add(dataSend)
     res.send(dataSend)
 })
@@ -164,7 +171,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     } else {
         tech = dataRecv.technologies
     }
-    console.log("this is tech in largeio backend:",tech)
+
     let dataSend = await addCve({
         url:url,
         technologies:tech
@@ -172,6 +179,9 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     
     // Add token to result
     dataSend['token'] = token
+
+    // Add vulns to result
+    dataSend['vulns'] = await getVulnsFromExploitDB(dataRecv);
     
     await database['largeio'].add(dataSend)
     res.send(dataSend)
@@ -203,6 +213,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     })
     
     dataSend['token'] = token
+    dataSend['vulns'] = dataRecv['vulns'];
     
     await database['whatweb'].add(dataSend)
     res.send(dataSend)
@@ -233,6 +244,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     })
     
     dataSend['token'] = token
+    dataSend['vulns'] = dataRecv['vulns'];
 
     await database['webtech'].add(dataSend)
     res.send(dataSend)
@@ -408,7 +420,8 @@ app.post('/url_analyze/server', async (req,res)=>{
     await database['server'].add({
         url:url,
         server:serverInfor,
-        token: token
+        token: token,
+        vulns: serverInfor['vulns']
     })
     res.send(serverInfor)
 })
@@ -476,7 +489,8 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     await database['wpscan'].add({
         url:url,
         wp:wp,
-        token: token
+        token: token,
+        vulns: wp['vulns']
     })
     res.send(wp)
 })
@@ -486,14 +500,15 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     let token = req.body.token;
 
-    let droop = await droopScan(url)
+    let droope = await droopScan(url)
 
     await database['droopescan'].add({
         url:url,
         droop:droop,
-        token: token
+        token: token,
+        vulns: droope['vulns']
     })
-    res.send(droop)
+    res.send(droope)
 })
 
 app.post('/url_analyze/joomscan', async (req,res)=>{
@@ -506,7 +521,8 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     await database['joomscan'].add({
         url:url,
         joomscan:joomscan,
-        token: token
+        token: token,
+        vulns: joomscan['vulns']
     })
     res.send(joomscan)
 })
@@ -520,7 +536,8 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     await database['nikto'].add({
         url:url,
         nikto:nikto,
-        token: token
+        token: token,
+        vulns: nikto['vulnerabilities']
     })
     res.send(nikto)
 })
@@ -589,21 +606,31 @@ app.post("/create_report",async (req,res)=>{
     let data = {}
     let url = req.body.url
     let token = req.body.token
+    let vulns = []
 
     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wapp'] = result[0] ? result[0] : ""
+        data['wapp'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
     })
     await database['whatweb'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['whatweb'] = result[0] ? result[0] : ""
+        data['whatweb'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+        
     })
     await database['webtech'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['webtech'] = result[0] ? result[0] : ""
+        data['webtech'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['netcraft'] = result[0] ? result[0] : ""
+        data['netcraft'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['largeio'] = result[0] ? result[0] : ""
+        data['largeio'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     
     await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
@@ -629,7 +656,9 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['server'] = result[0] ? result[0] : ""
+        data['server'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     
     await database['wafw00f'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
@@ -637,20 +666,32 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wpscan'] = result[0] ? result[0] : ""
+        console.log(result);
+        data['wpscan'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     await database['droopescan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['droopescan'] = result[0] ? result[0] : ""
+        data['droopescan'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     await database['joomscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['joomscan'] = result[0] ? result[0] : ""
+        data['joomscan'] = result[0] ? result[0] : "";
+        vulns = vulns.concat(result[0] ? result[0].vulns : []);
+
     })
     await database['nikto'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['nikto'] = result[0] ? result[0] : ""
     })
+
     data['url'] = url
     let time = new Date()
     data['time_create'] =  time
+
+    // Add vulns to reports
+    data['vulns'] = [...new Set(vulns)];
+
     await database['report'].add(data)
 
     res.send("create database success")
