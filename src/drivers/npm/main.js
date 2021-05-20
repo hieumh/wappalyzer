@@ -129,13 +129,9 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
-    console.log('xxxtoken', token)
-    console.log('xxxdatabase', database['wapp'].findOne)
-    console.log(dataSend);
-    
-    // Add vulns to Vulns Table
-    //let result = await processVulnsTable(token, 'add', dataSend['vulns']);
 
+    // Add vulns to Vulns Table
+    // await processVulnsTable(token, 'add', dataSend['vulns']);
     res.send(dataSend)
 })
 
@@ -610,7 +606,6 @@ app.get('/search_database', async (req, res) => {
             let regex = new RegExp('\\s+', 'g');
             pattern = `(${pattern.replaceAll(regex, '|')})`
 
-            console.log(pattern);
             // Return _id to front-end
             let results = [];
 
@@ -641,7 +636,7 @@ app.get('/search_database', async (req, res) => {
 });
 
 // Delete all duplicate vulns 
-async function deleteDuplicateVulns(vulns) {
+function deleteDuplicateVulns(vulns) {
     let vulnArr = vulns.map( (vuln) => { return [vuln.Title, vuln] });
     let mapArr = new Map(vulnArr);
     vulns = [...mapArr.values()];
@@ -651,12 +646,11 @@ async function deleteDuplicateVulns(vulns) {
 // Process Vulns Table with load, add, or delete
 async function processVulnsTable(token, action, vulns) {
 
-    let currentTable = await database['vuln'].getTable({token: token});
-    let _id = currentTable._id;
-    let currentVulns = currentTable[0] ? currentTable['vulns'] : [];
+    let currentTable = await database['vuln'].findOne({token: token});
+    let currentVulns = currentTable ? currentTable : [];
 
     if (action === 'add') {
-        currentVulns.push(vulns);
+        currentVulns = currentVulns.concat(vulns);
         currentVulns = deleteDuplicateVulns(currentVulns);
     }
 
@@ -665,14 +659,16 @@ async function processVulnsTable(token, action, vulns) {
         currentVulns.splice(posOfVuln, 1);
     }
     
-    // The first time which adding vulns to database
-    try{
-        await database['vuln'].replaceDocument({_id}, {token: token, vulns: currentVulns});
-    } catch {
+    // Decide first time or many times which adding vulns to database
+    if (!currentTable) {
+        console.log('get here');
         await database['vuln'].add({token: token, vulns: currentVulns});
+    } else {
+        let id = currentTable._id;
+        await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
     }
-
 }
+
 app.post('/update_vulns_table', async(req, res) => {
     let {token, action, vulns} = req.body;
 
@@ -748,7 +744,6 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        console.log(result);
         data['wpscan'] = result[0] ? result[0] : "";
         vulns = vulns.concat(result[0] ? result[0].vulns : []);
 
@@ -773,9 +768,7 @@ app.post("/create_report",async (req,res)=>{
 
     // Add vulns to reports
     // Delete duplicate of vulns
-    console.log(vulns.length);
     data['vulns'] = [...new Set(vulns)];
-    console.log(data['vulns'].length);
 
     await database['report'].add(data)
 
