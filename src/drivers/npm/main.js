@@ -95,9 +95,9 @@ app.get("/token/generator", (req, res) => {
 // get result analyzed in database
 app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
-    let {url} = req.query
+    let {token} = req.query
 
-    let result = await database[tool].findOne({url:url})
+    let result = await database[tool].findOne({token:token})
     res.send(result)
 })
 
