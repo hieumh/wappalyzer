@@ -307,15 +307,15 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     // save to database
     let tree = createTree(arr)
-
-    
     delete Object.assign(tree, {["/"]: tree[""] })[""];
     
-    let dataResult = await database['dic'].add({
+    let dataSave = {
         url:url,
-        dic:tree,
-        token: token
-    })
+        token: token,
+        dic:JSON.stringify(tree)
+    }
+
+    let dataResult = await database['dic'].add(dataSave)
 
     res.send(dataResult)
 })
@@ -708,6 +708,7 @@ app.post("/create_report",async (req,res)=>{
     let vulns = []
 
     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+        console.log(result[0], typeof result[0])
         data['wapp'] = result[0] ? result[0] : "";
         vulns = vulns.concat(result[0] ? result[0].vulns : []);
     })

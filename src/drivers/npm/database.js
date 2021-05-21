@@ -13,9 +13,9 @@ class databaseHandle{
                 links:Array,
             },
             'dic':{
-                token: String,
                 url:String,
-                dic:Object
+                token: String,
+                dic :String
             },
             'wapp':{
                 token: String,
@@ -53,7 +53,7 @@ class databaseHandle{
             'dig':{
                 token: String,
                 url:String,
-                dns:Array
+                dns:String
             },
             'fierce':{
                 token: String,
