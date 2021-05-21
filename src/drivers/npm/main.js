@@ -587,7 +587,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     })
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', nikto['vulnerabilities']);
+    // await processVulnsTable(token, 'add', nikto['vulnerabilities']);
 
     res.send(nikto)
 })
