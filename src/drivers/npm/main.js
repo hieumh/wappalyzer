@@ -97,9 +97,9 @@ app.get("/token/generator", (req, res) => {
 // get result analyzed in database
 app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
-    let {url} = req.query
+    let {token} = req.query
 
-    let result = await database[tool].findOne({url:url})
+    let result = await database[tool].findOne({token:token})
     res.send(result)
 })
 
@@ -126,13 +126,21 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     let token = req.body.token;
 
-    await startWep(database,url, token)
+
+    // wait for analyze successfully
+    let check = await startWep(database,url, token)
+    
+    if(!check){
+        console.log("error")
+    } else {
+        console.log("add success")
+    }
 
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
-
-    // Add vulns to Vulns Table
+    
     await processVulnsTable(token, 'add', dataSend['vulns']);
+    console.log("data get from database",dataSend)
 
     res.send(dataSend)
 })
@@ -293,14 +301,18 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     // save to database
     let tree = createTree(arr)
+
+    
     delete Object.assign(tree, {["/"]: tree[""] })[""];
-    await database['dic'].add({
+    console.log(tree)
+    
+    let dataResult = await database['dic'].add({
         url:url,
         dic:tree,
         token: token
     })
 
-    res.send(tree)
+    res.send(dataResult.dic)
 })
 
 
@@ -529,15 +541,18 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     await database['droopescan'].add({
         url:url,
-        droop:droop,
+        droope:droope,
         token: token,
         vulns: droope['vulns']
     })
+
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', droope['vulns']);
 
     res.send(droope)
+
+
 })
 
 app.post('/url_analyze/joomscan', async (req,res)=>{
