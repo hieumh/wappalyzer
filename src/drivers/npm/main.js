@@ -594,7 +594,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     })
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', nikto['vulnerabilities']);
+    // await processVulnsTable(token, 'add', nikto['vulnerabilities']);
 
     res.send(nikto)
 })
@@ -677,7 +677,7 @@ async function processVulnsTable(token, action, vulns) {
     }
 
     if (action === 'delete') {
-        posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
+        let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
         currentVulns.splice(posOfVuln, 1);
     }
     
@@ -694,10 +694,11 @@ app.post('/update_vulns_table', async(req, res) => {
     
     let {token, action, vulns} = req.body;
 
-    await processVulnsTable(action, vulns);
-    console.log({token, action, vulns})
+    await processVulnsTable(token, action, vulns);
+    
     let vulnTable = await database['vuln'].getTable({token: token});
-    res.send(vulnTable[0] );
+
+    res.send(vulnTable[0]);
 });
 
 // create report (base on the last result of each table)
