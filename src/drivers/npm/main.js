@@ -37,6 +37,7 @@ const { ServerResponse } = require('http')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
+let initial = async function() {await database['wapp'].add({token: 'nothing', url: 'nothing', technologies: [], vulns: []})}();
 database['netcraft'] = new databaseHandle('netcraft')
 database['largeio'] = new databaseHandle('largeio')
 database['whatweb'] = new databaseHandle('whatweb')
@@ -131,7 +132,8 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     let dataSend = await database['wapp'].findOne({token:token})
 
     // Add vulns to Vulns Table
-    // await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(token, 'add', dataSend['vulns']);
+
     res.send(dataSend)
 })
 
@@ -647,7 +649,7 @@ function deleteDuplicateVulns(vulns) {
 async function processVulnsTable(token, action, vulns) {
 
     let currentTable = await database['vuln'].findOne({token: token});
-    let currentVulns = currentTable ? currentTable : [];
+    let currentVulns = currentTable ? currentTable['vulns'] : [];
 
     if (action === 'add') {
         currentVulns = currentVulns.concat(vulns);
@@ -661,7 +663,6 @@ async function processVulnsTable(token, action, vulns) {
     
     // Decide first time or many times which adding vulns to database
     if (!currentTable) {
-        console.log('get here');
         await database['vuln'].add({token: token, vulns: currentVulns});
     } else {
         let id = currentTable._id;
@@ -763,12 +764,11 @@ app.post("/create_report",async (req,res)=>{
     })
 
     data['url'] = url
+
     let time = new Date()
     data['time_create'] =  time
 
-    // Add vulns to reports
-    // Delete duplicate of vulns
-    data['vulns'] = [...new Set(vulns)];
+    data['token'] = token;
 
     await database['report'].add(data)
 
