@@ -107,6 +107,11 @@ class databaseHandle{
                 nikto:Array,
                 vulns: Array
             },
+
+            'vuln': {
+                token: String,
+                vulns: Array
+            },
             'report':{
                 url:String,
                 domain:Object,
@@ -128,8 +133,8 @@ class databaseHandle{
                 joomscan:Object,
                 nikto:Object,
                 vulns: Object,
-                time_create:String
-
+                time_create:String,
+                token: String
             }
         }
         this.mapSchema = {}
@@ -200,6 +205,9 @@ class databaseHandle{
     async getTable(condition, exclusion){
         // to get all row in table condition={}, exclusion={_id}
         return await this.modelTable.find(condition, exclusion).exec()
+    }
+    async replaceDocument(condition, replaceObj) {
+        await this.modelTable.replaceOne(condition, replaceObj);
     }
     async delete(target){
         // delete one function

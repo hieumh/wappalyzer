@@ -139,7 +139,6 @@ async function getVulnsFromExploitDB(data) {
     } else {
         for (let index = 0; index < data.technologies.length; index++) {
             if (data.technologies[index].version !== null && data.technologies[index].version !== "") {
-                console.log(data.technologies[index].name);
                 let results = await searchsploit(data.technologies[index].name + ' ' + data.technologies[index].version);
                 results = JSON.parse(results);
                 vulns = vulns.concat(results['RESULTS_EXPLOIT'])

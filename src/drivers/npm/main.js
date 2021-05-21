@@ -37,6 +37,7 @@ const { ServerResponse } = require('http')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
+let initial = async function() {await database['wapp'].add({token: 'nothing', url: 'nothing', technologies: [], vulns: []})}();
 database['netcraft'] = new databaseHandle('netcraft')
 database['largeio'] = new databaseHandle('largeio')
 database['whatweb'] = new databaseHandle('whatweb')
@@ -61,9 +62,10 @@ database['droopescan'] = new databaseHandle('droopescan')
 database['joomscan'] = new databaseHandle('joomscan')
 database['nikto'] = new databaseHandle('nikto')
 
+// Create vuln collection
+database['vuln'] = new databaseHandle('vuln');
+
 database['report'] = new databaseHandle('report')
-
-
 
 
 const app = express()
@@ -124,9 +126,10 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     let token = req.body.token;
 
+
     // wait for analyze successfully
     let check = await startWep(database,url, token)
-    console.log("this is check:",check)
+    
     if(!check){
         console.log("error")
     } else {
@@ -135,6 +138,8 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
+    
+    await processVulnsTable(token, 'add', dataSend['vulns']);
     console.log("data get from database",dataSend)
 
     res.send(dataSend)
@@ -159,6 +164,9 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
     // Add vulns to result
     dataSend['vulns'] = await getVulnsForNetcraft(dataRecv);
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', dataSend['vulns']);
 
     await database['netcraft'].add(dataSend)
     res.send(dataSend)
@@ -190,6 +198,9 @@ app.post('/url_analyze/largeio', async (req,res)=>{
 
     // Add vulns to result
     dataSend['vulns'] = await getVulnsFromExploitDB(dataRecv);
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', dataSend['vulns']);
     
     await database['largeio'].add(dataSend)
     res.send(dataSend)
@@ -222,6 +233,9 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', dataSend['vulns']);
     
     await database['whatweb'].add(dataSend)
     res.send(dataSend)
@@ -253,6 +267,9 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', dataSend['vulns']);
 
     await database['webtech'].add(dataSend)
     res.send(dataSend)
@@ -435,6 +452,10 @@ app.post('/url_analyze/server', async (req,res)=>{
         token: token,
         vulns: serverInfor['vulns']
     })
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', serverInfor['vulns']);
+
     res.send(serverInfor)
 })
 /////////////////////////////////////////////////////
@@ -504,6 +525,10 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
         token: token,
         vulns: wp['vulns']
     })
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', wp['vulns']);
+
     res.send(wp)
 })
 
@@ -512,15 +537,22 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     let token = req.body.token;
 
-    let droop = await droopScan(url)
+    let droope = await droopScan(url)
 
     await database['droopescan'].add({
         url:url,
-        droop:droop,
+        droope:droope,
         token: token,
-        vulns: droop['vulns']
+        vulns: droope['vulns']
     })
-    res.send(droop)
+
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', droope['vulns']);
+
+    res.send(droope)
+
+
 })
 
 app.post('/url_analyze/joomscan', async (req,res)=>{
@@ -536,6 +568,10 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
         token: token,
         vulns: joomscan['vulns']
     })
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', joomscan['vulns']);
+
     res.send(joomscan)
 })
 
@@ -551,6 +587,10 @@ app.post('/url_analyze/nikto', async (req,res)=>{
         token: token,
         vulns: nikto['vulnerabilities']
     })
+
+    // Add vulns to Vulns Table
+    await processVulnsTable(token, 'add', nikto['vulnerabilities']);
+
     res.send(nikto)
 })
 ///////////////////////////////////////////////////
@@ -583,7 +623,6 @@ app.get('/search_database', async (req, res) => {
             let regex = new RegExp('\\s+', 'g');
             pattern = `(${pattern.replaceAll(regex, '|')})`
 
-            console.log(pattern);
             // Return _id to front-end
             let results = [];
 
@@ -611,6 +650,49 @@ app.get('/search_database', async (req, res) => {
         }
         
     }
+});
+
+// Delete all duplicate vulns 
+function deleteDuplicateVulns(vulns) {
+    let vulnArr = vulns.map( (vuln) => { return [vuln.Title, vuln] });
+    let mapArr = new Map(vulnArr);
+    vulns = [...mapArr.values()];
+    return vulns;
+}
+
+// Process Vulns Table with load, add, or delete
+async function processVulnsTable(token, action, vulns) {
+
+    let currentTable = await database['vuln'].findOne({token: token});
+    let currentVulns = currentTable ? currentTable['vulns'] : [];
+
+    if (action === 'add') {
+        currentVulns = currentVulns.concat(vulns);
+        currentVulns = deleteDuplicateVulns(currentVulns);
+    }
+
+    if (action === 'delete') {
+        posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
+        currentVulns.splice(posOfVuln, 1);
+    }
+    
+    // Decide first time or many times which adding vulns to database
+    if (!currentTable) {
+        await database['vuln'].add({token: token, vulns: currentVulns});
+    } else {
+        let id = currentTable._id;
+        await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
+    }
+}
+
+app.post('/update_vulns_table', async(req, res) => {
+    let {token, action, vulns} = req.body;
+
+    await processVulnsTable(action, vulns);
+    
+    vulnTable = await database['vuln'].getTable({token: token});
+
+    res.send(vulnTable.vulns);
 });
 
 // create report (base on the last result of each table)
@@ -678,7 +760,6 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        console.log(result);
         data['wpscan'] = result[0] ? result[0] : "";
         vulns = vulns.concat(result[0] ? result[0].vulns : []);
 
@@ -698,11 +779,11 @@ app.post("/create_report",async (req,res)=>{
     })
 
     data['url'] = url
+
     let time = new Date()
     data['time_create'] =  time
 
-    // Add vulns to reports
-    data['vulns'] = [...new Set(vulns)];
+    data['token'] = token;
 
     await database['report'].add(data)
 
