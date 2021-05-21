@@ -1,13 +1,13 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 async function checkCms(url){

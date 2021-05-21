@@ -139,7 +139,6 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     let dataSend = await database['wapp'].findOne({token:token})
     
     await processVulnsTable(token, 'add', dataSend['vulns']);
-    console.log("data get from database",dataSend)
 
     res.send(dataSend)
 })
@@ -671,7 +670,7 @@ async function processVulnsTable(token, action, vulns) {
     }
 
     if (action === 'delete') {
-        posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
+        let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
         currentVulns.splice(posOfVuln, 1);
     }
     
@@ -687,11 +686,11 @@ async function processVulnsTable(token, action, vulns) {
 app.post('/update_vulns_table', async(req, res) => {
     let {token, action, vulns} = req.body;
 
-    await processVulnsTable(action, vulns);
+    await processVulnsTable(token, action, vulns);
     
-    vulnTable = await database['vuln'].getTable({token: token});
+    let vulnTable = await database['vuln'].getTable({token: token});
 
-    res.send(vulnTable.vulns);
+    res.send(vulnTable[0]);
 });
 
 // create report (base on the last result of each table)
