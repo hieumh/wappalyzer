@@ -54,9 +54,8 @@ async function getDicGobuster(url){
 }
 
 // get technologies of website with whatweb
-async function getTechWhatWeb(url){
-    console.log(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`);
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`)
+async function getTechWhatWeb(url,token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}&token=${token}`)
     return result.body
 }
 

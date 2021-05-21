@@ -109,7 +109,6 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
     try {
         let result = await checkCms(url)
         result = JSON.parse(result)
-        // console.log(url, result)
         res.send(result)
     } catch(err){
         console.log(err)
@@ -128,12 +127,6 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     // wait for analyze successfully
     let check = await startWep(database,url, token)
-    
-    if(!check){
-        console.log("error")
-    } else {
-        console.log("add success")
-    }
 
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
@@ -217,7 +210,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     let token = req.body.token;
 
-    let dataRecv = await getTechWhatWeb(url)
+    let dataRecv = await getTechWhatWeb(url,token)
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
@@ -356,19 +349,19 @@ app.post('/url_analyze/dig',async (req,res)=>{
     let {url,token} = req.body
 
     let dnsInfor = await getDnsDig(url)
+
+    let dataSend 
     try {
-        dnsInfor = JSON.parse(dnsInfor)
-    } catch (err){
-        console.log(err)
+        dataSend = await database['dig'].add({
+            url:url,
+            dns:dnsInfor,
+            token: token
+        })
+    } catch(err){
+        console.error(err)
     }
-
-
-    await database['dig'].add({
-        url:url,
-        dns:dnsInfor,
-        token: token
-    })
-    res.send(dnsInfor)
+    
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/fierce', async (req,res)=>{
@@ -659,7 +652,13 @@ app.get('/search_database', async (req, res) => {
 
 // Delete all duplicate vulns 
 function deleteDuplicateVulns(vulns) {
-    let vulnArr = vulns.map( (vuln) => { return [vuln.Title, vuln] });
+    let vulnArr
+    try {
+        vulnArr = vulns.map( (vuln) => { return [vuln.Title.trim(), vuln] });
+    } catch(error){
+        console.log(error)
+        console.log(vulns)
+    }
     let mapArr = new Map(vulnArr);
     vulns = [...mapArr.values()];
     return vulns;
@@ -693,7 +692,7 @@ async function processVulnsTable(token, action, vulns) {
 app.post('/update_vulns_table', async(req, res) => {
     
     let {token, action, vulns} = req.body;
-
+    console.log({token, action, vulns} )
     await processVulnsTable(token, action, vulns);
     
     let vulnTable = await database['vuln'].getTable({token: token});
@@ -709,7 +708,6 @@ app.post("/create_report",async (req,res)=>{
     let vulns = []
 
     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        console.log(result[0], typeof result[0])
         data['wapp'] = result[0] ? result[0] : "";
         vulns = vulns.concat(result[0] ? result[0].vulns : []);
     })
@@ -788,7 +786,7 @@ app.post("/create_report",async (req,res)=>{
     data['url'] = url
 
     let time = new Date()
-    data['time_create'] =  time
+    data['time_create'] =   time
 
     data['token'] = token;
 
