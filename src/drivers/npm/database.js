@@ -186,12 +186,13 @@ class databaseHandle{
     }
     async add(obj){
         let result = new this.modelTable(obj)
-        await result.save(err=>{
-            if (err) {
-                console.log(err)
-                return
-            }
-        })
+        try{
+            let check = await result.save()
+            console.log("i don't know")
+            return check
+        } catch(err){
+            console.log(err.stack)
+        }
     }
     async findOne(target){
         return await (this.modelTable.findOne(target)).exec()
