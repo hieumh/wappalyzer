@@ -37,7 +37,6 @@ const { ServerResponse } = require('http')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
-let initial = async function() {await database['wapp'].add({token: 'nothing', url: 'nothing', technologies: [], vulns: []})}();
 database['netcraft'] = new databaseHandle('netcraft')
 database['largeio'] = new databaseHandle('largeio')
 database['whatweb'] = new databaseHandle('whatweb')
