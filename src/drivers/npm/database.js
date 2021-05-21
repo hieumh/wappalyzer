@@ -193,7 +193,6 @@ class databaseHandle{
         let result = new this.modelTable(obj)
         try{
             let check = await result.save()
-            console.log("i don't know")
             return check
         } catch(err){
             console.log(err.stack)

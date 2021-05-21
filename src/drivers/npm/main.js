@@ -75,7 +75,7 @@ app.use(bodyParser.urlencoded({
 }))
 
 app.use((req,res,next) =>{
-    res.append('Access-Control-Allow-Origin',["http://localhost:3001"])
+    res.append('Access-Control-Allow-Origin',"*")
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.append("Access-Control-Allow-Credentials", 'true');
     res.append('Access-Control-Allow-Headers', 'Origin,Content-Type,Cache-Control,Authorization');
@@ -109,7 +109,7 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
     try {
         let result = await checkCms(url)
         result = JSON.parse(result)
-
+        // console.log(url, result)
         res.send(result)
     } catch(err){
         console.log(err)
@@ -139,7 +139,6 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     let dataSend = await database['wapp'].findOne({token:token})
     
     await processVulnsTable(token, 'add', dataSend['vulns']);
-    console.log("data get from database",dataSend)
 
     res.send(dataSend)
 })
@@ -151,7 +150,11 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     let token = req.body.token;
 
     let dataRecv = await netcraft.netcraft(url)
-    dataRecv = JSON.parse(dataRecv)
+    try {
+        dataRecv = JSON.parse(dataRecv)
+    } catch (err){
+        console.log(err)
+    }
 
     let dataSend = await addCve({
         url:url,
@@ -178,7 +181,11 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     let token = req.body.token;
 
     let dataRecv = await largeio.largeio(url)
-    dataRecv = JSON.parse(dataRecv)
+    try {
+        dataRecv = JSON.parse(dataRecv)
+    } catch (err){
+        console.log(err)
+    }
 
     let tech
     if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
@@ -303,7 +310,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     
     delete Object.assign(tree, {["/"]: tree[""] })[""];
-    console.log(tree)
     
     let dataResult = await database['dic'].add({
         url:url,
@@ -311,7 +317,7 @@ app.post('/url_analyze/dic',async (req,res)=>{
         token: token
     })
 
-    res.send(dataResult.dic)
+    res.send(dataResult)
 })
 
 
@@ -685,13 +691,13 @@ async function processVulnsTable(token, action, vulns) {
 }
 
 app.post('/update_vulns_table', async(req, res) => {
+    
     let {token, action, vulns} = req.body;
 
     await processVulnsTable(action, vulns);
-    
-    vulnTable = await database['vuln'].getTable({token: token});
-
-    res.send(vulnTable.vulns);
+    console.log({token, action, vulns})
+    let vulnTable = await database['vuln'].getTable({token: token});
+    res.send(vulnTable[0] );
 });
 
 // create report (base on the last result of each table)
