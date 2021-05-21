@@ -133,8 +133,8 @@ class databaseHandle{
                 joomscan:Object,
                 nikto:Object,
                 vulns: Object,
-                time_create:String
-
+                time_create:String,
+                token: String
             }
         }
         this.mapSchema = {}
