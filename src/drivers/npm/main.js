@@ -373,7 +373,7 @@ app.post('/url_analyze/dig',async (req,res)=>{
 app.post('/url_analyze/fierce', async (req,res)=>{
     let {url,token} = req.body
 
-    let dnsInfor = await getDnsFierce(url)
+    let dnsInfor = await getDnsFierce(url, token)
 
     let dataSend = await database['fierce'].add({
         url:url,
@@ -448,7 +448,7 @@ app.post('/url_analyze/server', async (req,res)=>{
 
     let token = req.body.token;
 
-    let serverInfor = await getServerInfor(url)
+    let serverInfor = await getServerInfor(url, token)
 
     await database['server'].add({
         url:url,
@@ -474,7 +474,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
 
     let token = req.body.token;
 
-    let detectWaf = await getDWab(url)
+    let detectWaf = await getDWab(url, token)
     try {
         detectWaf = JSON.parse(detectWaf)
     } catch(err){
@@ -521,7 +521,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
 
     let token = req.body.token;
 
-    let wp = await wpScan(url)
+    let wp = await wpScan(url, token)
 
     await database['wpscan'].add({
         url:url,
