@@ -132,7 +132,7 @@ class databaseHandle{
                 droopescan:Object,
                 joomscan:Object,
                 nikto:Object,
-                vulns: Object,
+                vuln: Object,
                 time_create:String,
                 token: String
             }
@@ -189,14 +189,27 @@ class databaseHandle{
     checkExist(target){
         return this.findOne(target)
     }
-    async add(obj){
-        let result = new this.modelTable(obj)
-        try{
-            let check = await result.save()
-            return check
-        } catch(err){
-            console.log(err.stack)
+    async add(obj, token){
+        let currentTable = await (this.modelTable.findOne({token: token})).exec();
+        let _id = currentTable ? currentTable['_id'] : null;
+
+        if (_id) {
+
+            await this.modelTable.replaceOne({_id: _id}, obj);
+            return obj;
+
+        } else {
+
+            let result = new this.modelTable(obj)
+            try{
+                let check = await result.save()
+                return check
+            } catch(err){
+                console.log(err.stack)
+            }
+
         }
+        
     }
     async findOne(target){
         return await (this.modelTable.findOne(target)).exec()
