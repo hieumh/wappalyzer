@@ -639,10 +639,15 @@ app.get('/search_database', async (req, res) => {
 
                     // Convert content of each field to string for searching
                     let fieldContent = JSON.stringify(allReportsFromDatabase[index][fields[field]]);
-                    
+
                     regex = new RegExp(pattern, 'g');
-                    let searchResult = fieldContent.search(regex);
-                    if (searchResult.length !== -1){
+                    try{
+                        let searchResult = fieldContent.search(regex);
+                    } catch {
+                        let searchResult = -1
+                    }
+
+                    if (searchResult !== -1){
                         results.push(allReportsFromDatabase[index]);
                     }
                 }
