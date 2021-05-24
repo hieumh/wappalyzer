@@ -264,7 +264,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         technologies:tech
     })
     
- dataSend['token'] = token
+    dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
     // Add vulns to Vulns Table
@@ -470,27 +470,7 @@ app.post('/url_analyze/server', async (req,res)=>{
 
 
 ////////////////////////////////////////////////////
-// detect web firewall
-app.post('/url_analyze/wafw00f', async (req,res)=>{
-    let {url} =  req.body
-
-    let token = req.body.token;
-
-    let detectWaf = await getDWab(url, token)
-    try {
-        detectWaf = JSON.parse(detectWaf)
-    } catch(err){
-        console.error(err)
-    }
-
-    await database['wafw00f'].add({
-        url:url,
-        waf:detectWaf.wafs,
-        token: token
-    })
-    res.send(detectWaf)
-})
-
+// Detect web firewall
 app.post('/url_analyze/wafw00f', async (req,res)=>{
     let {url} =  req.body
 
@@ -698,7 +678,7 @@ async function processVulnsTable(token, action, vulns) {
         await database['vuln'].add({token: token, vulns: currentVulns});
     } else {
         let id = currentTable._id;
-        await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
+        let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
     }
 }
 
@@ -717,30 +697,24 @@ app.post("/create_report",async (req,res)=>{
     let data = {}
     let url = req.body.url
     let token = req.body.token
-    let vulns = []
 
     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['wapp'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
     })
     await database['whatweb'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['whatweb'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
         
     })
     await database['webtech'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['webtech'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
 
     })
     await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['netcraft'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
 
     })
     await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['largeio'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
 
     })
     
@@ -758,7 +732,6 @@ app.post("/create_report",async (req,res)=>{
         data['sublist3r'] = result[0] ? result[0] : ""
     })
 
-
     await database['dig'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['dns'] = result[0] ? result[0] : ""
     })
@@ -768,8 +741,6 @@ app.post("/create_report",async (req,res)=>{
 
     await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['server'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
-
     })
     
     await database['wafw00f'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
@@ -778,21 +749,21 @@ app.post("/create_report",async (req,res)=>{
 
     await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['wpscan'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
-
     })
     await database['droopescan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['droopescan'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
-
     })
+
     await database['joomscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['joomscan'] = result[0] ? result[0] : "";
-        vulns = vulns.concat(result[0] ? result[0].vulns : []);
-
     })
+
     await database['nikto'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['nikto'] = result[0] ? result[0] : ""
+    })
+
+    await database['vuln'].getTable({token: token}, {_id: 0, token: 0}).then((result) => {
+        data['vulns'] = result[0] ? result[0] : ""
     })
 
     data['url'] = url
@@ -802,7 +773,7 @@ app.post("/create_report",async (req,res)=>{
 
     data['token'] = token;
 
-    await database['report'].add(data)
+    await database['report'].add(data, token)
 
     res.send("create database success")
 })
