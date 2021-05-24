@@ -763,7 +763,7 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['vuln'].getTable({token: token}, {_id: 0, token: 0}).then((result) => {
-        data['vuln'] = result[0] ? result[0] : ""
+        data['vulns'] = result[0] ? result[0] : ""
     })
 
     data['url'] = url

@@ -132,7 +132,7 @@ class databaseHandle{
                 droopescan:Object,
                 joomscan:Object,
                 nikto:Object,
-                vuln: Object,
+                vulns: Object,
                 time_create:String,
                 token: String
             }
