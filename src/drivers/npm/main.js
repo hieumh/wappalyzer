@@ -375,12 +375,12 @@ app.post('/url_analyze/fierce', async (req,res)=>{
 
     let dnsInfor = await getDnsFierce(url)
 
-    await database['fierce'].add({
+    let dataSend = await database['fierce'].add({
         url:url,
         dns:dnsInfor,
         token: token
     })
-    res.send({"fierce":dnsInfor})
+    res.send(dataSend)
 })
 ///////////////////////////////////////////////////
 
