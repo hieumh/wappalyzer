@@ -26,8 +26,8 @@ async function getDnsDig(url){
     return result.body
 }
 
-async function getDnsFierce(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/fierce?url=${url}`)
+async function getDnsFierce(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/fierce?url=${url}&token=${token}`)
     return result.body
 }
 
@@ -66,20 +66,20 @@ async function getTechWebTech(url){
 }
 
 // get network information of target url with nmap
-async function getServerInfor(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nmap?url=${url}`)
+async function getServerInfor(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/nmap?url=${url}&token=${token}`)
     return result.body
 }
 
 // detech web firewall
-async function getDWab(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wafw00f?url=${url}`)
+async function getDWab(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wafw00f?url=${url}&token=${token}`)
     return result.body
 }
 
 // scaning
-async function wpScan(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wpscan?url=${url}`)
+async function wpScan(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/wpscan?url=${url}&token=${token}`)
     return result.body
 }
 
