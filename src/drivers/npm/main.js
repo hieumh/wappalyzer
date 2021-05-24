@@ -303,8 +303,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
     delete Object.assign(tree, {["/"]: tree[""] })[""];
     tree = new Object(tree)
     
-
-    console.log("object in directory:",tree)
     let dataSave = {
         url:url,
         token: token,
@@ -408,7 +406,6 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    console.log("object in whois:", domainInfor)
     let dataSend = await database['whois'].add({
         url:url,
         domains:domainInfor,
@@ -449,10 +446,15 @@ app.post('/url_analyze/server', async (req,res)=>{
     let token = req.body.token;
 
     let serverInfor = await getServerInfor(url, token)
+    try{
+        serverInfor = JSON.parse(serverInfor);
+    } catch(error) {
+        console.log(error);
+    }
 
     await database['server'].add({
         url:url,
-        server:serverInfor,
+        server:serverInfor['nmap'],
         token: token,
         vulns: serverInfor['vulns']
     })
