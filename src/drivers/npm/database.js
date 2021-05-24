@@ -189,8 +189,8 @@ class databaseHandle{
     checkExist(target){
         return this.findOne(target)
     }
-    async add(obj, token){
-        let currentTable = await (this.modelTable.findOne({token: token})).exec();
+    async add(obj){
+        let currentTable = await (this.modelTable.findOne({token: obj.token})).exec();
         let _id = currentTable ? currentTable['_id'] : null;
 
         if (_id) {

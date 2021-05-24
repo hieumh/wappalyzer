@@ -163,7 +163,7 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
 
-    await database['netcraft'].add(dataSend, token)
+    await database['netcraft'].add(dataSend)
     res.send(dataSend)
 })
 
@@ -201,7 +201,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
     
-    await database['largeio'].add(dataSend, token)
+    await database['largeio'].add(dataSend)
     res.send(dataSend)
 })
 
@@ -236,7 +236,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
     
-    await database['whatweb'].add(dataSend, token)
+    await database['whatweb'].add(dataSend)
     res.send(dataSend)
 })
 
@@ -270,7 +270,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
 
-    await database['webtech'].add(dataSend, token)
+    await database['webtech'].add(dataSend)
     res.send(dataSend)
 })
 ////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     console.log("this is dic:",dataSave)
 
-    let dataResult = await database['dic'].add(dataSave, token)
+    let dataResult = await database['dic'].add(dataSave)
 
     res.send(dataResult)
 })
@@ -338,7 +338,7 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
         gobuster:dataRecv,
         token: token
     }
-    dataSend = await database['gobuster'].add(dataSend, token)
+    dataSend = await database['gobuster'].add(dataSend)
 
     res.send(dataSend)
 })
@@ -360,7 +360,7 @@ app.post('/url_analyze/dig',async (req,res)=>{
             url:url,
             dns:dnsInfor,
             token: token
-        }, token)
+        })
     } catch(err){
         console.error(err)
     }
@@ -377,7 +377,7 @@ app.post('/url_analyze/fierce', async (req,res)=>{
         url:url,
         dns:dnsInfor,
         token: token
-    }, token)
+    })
     res.send(dataSend)
 })
 ///////////////////////////////////////////////////
@@ -410,7 +410,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
         url:url,
         domains:domainInfor,
         token: token
-    }, token)
+    })
     res.send(dataSend)
 })
 
@@ -430,7 +430,7 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
         url:url,
         domains:domainInfor.subdomains,
         token: token
-    }, token)
+    })
     res.send(dataSend)
 })
 /////////////////////////////////////////////////////
@@ -457,7 +457,7 @@ app.post('/url_analyze/server', async (req,res)=>{
         server:serverInfor['nmap'],
         token: token,
         vulns: serverInfor['vulns']
-    }, token)
+    })
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', serverInfor['vulns']);
@@ -487,7 +487,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
         url:url,
         waf:detectWaf.wafs,
         token: token
-    }, token)
+    })
     res.send(detectWaf)
 })
 ///////////////////////////////////////////////////
@@ -510,7 +510,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
         wp:wp,
         token: token,
         vulns: wp['vulns']
-    }, token)
+    })
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', wp['vulns']);
@@ -530,7 +530,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
         droope:droope,
         token: token,
         vulns: droope['vulns']
-    }, token)
+    })
 
 
     // Add vulns to Vulns Table
@@ -553,7 +553,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
         joomscan:joomscan,
         token: token,
         vulns: joomscan['vulns']
-    }, token)
+    })
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', joomscan['vulns']);
@@ -572,7 +572,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
         nikto:nikto,
         token: token,
         vulns: nikto['vulnerabilities']
-    }, token)
+    })
 
     // Add vulns to Vulns Table
     // await processVulnsTable(token, 'add', nikto['vulnerabilities']);
