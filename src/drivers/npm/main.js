@@ -643,13 +643,13 @@ app.get('/search_database', async (req, res) => {
                     regex = new RegExp(pattern, 'g');
                     let searchResult = fieldContent.search(regex);
                     if (searchResult.length !== -1){
-                        results.push(allReportsFromDatabase[index]._id);
+                        results.push(allReportsFromDatabase[index]);
                     }
                 }
             }
 
             // Delete dumplicate elements in results
-            results = [...new Set(results)]
+            results = deleteDuplicate('_id', results);
             res.send(results);
         }
         
@@ -657,16 +657,16 @@ app.get('/search_database', async (req, res) => {
 });
 
 // Delete all duplicate vulns 
-function deleteDuplicateVulns(vulns) {
-    let vulnArr
+function deleteDuplicate(fieldForFilter, arrayOfObjects) {
+    let arr
     try {
-        vulnArr = vulns.map( (vuln) => { return [vuln.Title.trim(), vuln] });
+        arr = arrayOfObjects.map( (object) => { return [object[fieldForFilter].trim(), object] });
     } catch(error){
         console.error(error)
     }
-    let mapArr = new Map(vulnArr);
-    vulns = [...mapArr.values()];
-    return vulns;
+    let mapArr = new Map(arr);
+    arrayOfObjects = [...mapArr.values()];
+    return arrayOfObjects;
 }
 
 // Process Vulns Table with load, add, or delete
@@ -677,7 +677,7 @@ async function processVulnsTable(token, action, vulns) {
 
     if (action === 'add') {
         currentVulns = currentVulns.concat(vulns);
-        currentVulns = deleteDuplicateVulns(currentVulns);
+        currentVulns = deleteDuplicate('Title',currentVulns);
     }
 
     if (action === 'delete') {
