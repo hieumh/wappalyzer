@@ -201,7 +201,7 @@ function handleLink(str){
 function treeParse(path_str,index=0,path={}){
     // intial value at the first time
     if (path[path_str[index]]==undefined){
-        path[path_str[index]] = {}
+        path[path_str[index]] = JSON.stringify({})
     }
     let object = path
 
@@ -212,7 +212,7 @@ function treeParse(path_str,index=0,path={}){
         }
         // intial object or assign value
         if (path[path_str[index]][path_str[index+1]]==undefined){
-            path[path_str[index]][path_str[index+1]] = {}
+            path[path_str[index]][path_str[index+1]] = JSON.stringify({})
         } 
     
         index += 1

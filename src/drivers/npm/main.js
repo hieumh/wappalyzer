@@ -111,7 +111,7 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
         result = JSON.parse(result)
         res.send(result)
     } catch(err){
-        console.log(err)
+        console.error(err)
         res.status(500)
         res.send(err)
     }
@@ -146,7 +146,7 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
 
     let dataSend = await addCve({
@@ -177,7 +177,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
 
     let tech
@@ -214,7 +214,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
     
 
@@ -249,7 +249,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
 
     let tech
@@ -264,7 +264,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         technologies:tech
     })
     
-    dataSend['token'] = token
+ dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
     // Add vulns to Vulns Table
@@ -301,12 +301,17 @@ app.post('/url_analyze/dic',async (req,res)=>{
     // save to database
     let tree = createTree(arr)
     delete Object.assign(tree, {["/"]: tree[""] })[""];
+    tree = new Object(tree)
     
+
+    console.log("object in directory:",tree)
     let dataSave = {
         url:url,
         token: token,
-        dic:JSON.stringify(tree)
+        trees:tree
     }
+
+    console.log("this is dic:",dataSave)
 
     let dataResult = await database['dic'].add(dataSave)
 
@@ -326,7 +331,7 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
 
     // add to database
@@ -335,7 +340,8 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
         gobuster:dataRecv,
         token: token
     }
-    await database['gobuster'].add(dataSend)
+    dataSend = await database['gobuster'].add(dataSend)
+
     res.send(dataSend)
 })
 ///////////////////////////////////////////////////
@@ -392,9 +398,8 @@ app.post('/url_analyze/whois', async (req,res)=>{
     try {
         domainInfor = JSON.parse(domainInfor)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
-
 
     let keys = Object.keys(domainInfor)
     for(let key of keys){
@@ -403,12 +408,13 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    await database['whois'].add({
+    console.log("object in whois:", domainInfor)
+    let dataSend = await database['whois'].add({
         url:url,
         domains:domainInfor,
         token: token
     })
-    res.send(domainInfor)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/sublist3r', async (req,res)=>{
@@ -420,15 +426,15 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
     try {
         domainInfor = JSON.parse(domainInfor)
     } catch (err){
-        console.log(err)
+        console.error(err)
     }
 
-    await database['sublist3r'].add({
+    let dataSend = await database['sublist3r'].add({
         url:url,
-        domains:domainInfor,
+        domains:domainInfor.subdomains,
         token: token
     })
-    res.send(domainInfor)
+    res.send(dataSend)
 })
 /////////////////////////////////////////////////////
 
@@ -472,7 +478,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     try {
         detectWaf = JSON.parse(detectWaf)
     } catch(err){
-        console.log(err)
+        console.error(err)
     }
 
     await database['wafw00f'].add({
@@ -492,7 +498,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     try {
         detectWaf = JSON.parse(detectWaf)
     } catch(err){
-        console.log(err)
+        console.error(err)
     }
 
     await database['wafw00f'].add({
@@ -656,8 +662,7 @@ function deleteDuplicateVulns(vulns) {
     try {
         vulnArr = vulns.map( (vuln) => { return [vuln.Title.trim(), vuln] });
     } catch(error){
-        console.log(error)
-        console.log(vulns)
+        console.error(error)
     }
     let mapArr = new Map(vulnArr);
     vulns = [...mapArr.values()];
@@ -692,7 +697,6 @@ async function processVulnsTable(token, action, vulns) {
 app.post('/update_vulns_table', async(req, res) => {
     
     let {token, action, vulns} = req.body;
-    console.log({token, action, vulns} )
     await processVulnsTable(token, action, vulns);
     
     let vulnTable = await database['vuln'].getTable({token: token});
@@ -740,7 +744,7 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['domain'] = result[0] ? result[0] : ""
+        data['whois'] = result[0] ? result[0] : ""
     })
     await database['sublist3r'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
         data['sublist3r'] = result[0] ? result[0] : ""
