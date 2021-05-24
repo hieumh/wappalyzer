@@ -15,7 +15,7 @@ class databaseHandle{
             'dic':{
                 url:String,
                 token: String,
-                dic :String
+                trees: Object
             },
             'wapp':{
                 token: String,
@@ -38,7 +38,7 @@ class databaseHandle{
             'whois':{
                 token: String,
                 url:String,
-                domains:Array
+                domains:Object
             },
             'sublist3r':{
                 token: String,
@@ -48,7 +48,7 @@ class databaseHandle{
             'gobuster':{
                 token: String,
                 url:String,
-                gobuster:Array
+                gobuster:Object
             },
             'dig':{
                 token: String,
