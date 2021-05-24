@@ -639,12 +639,13 @@ app.get('/search_database', async (req, res) => {
 
                     // Convert content of each field to string for searching
                     let fieldContent = JSON.stringify(allReportsFromDatabase[index][fields[field]]);
-
+                    
+                    let searchResult
                     regex = new RegExp(pattern, 'g');
                     try{
-                        let searchResult = fieldContent.search(regex);
+                        searchResult = fieldContent.search(regex);
                     } catch {
-                        let searchResult = -1
+                        searchResult = -1
                     }
 
                     if (searchResult !== -1){
@@ -665,7 +666,7 @@ app.get('/search_database', async (req, res) => {
 function deleteDuplicate(fieldForFilter, arrayOfObjects) {
     let arr
     try {
-        arr = arrayOfObjects.map( (object) => { return [object[fieldForFilter].trim(), object] });
+        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
     } catch(error){
         console.error(error)
     }
