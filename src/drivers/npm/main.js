@@ -577,7 +577,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     let {url} =  req.body
     let token = req.body.token;
 
-    let nikto = await niktoScan(url)
+    let nikto = await niktoScan(url, token)
 
     await database['nikto'].add({
         url:url,
