@@ -303,8 +303,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
     delete Object.assign(tree, {["/"]: tree[""] })[""];
     tree = new Object(tree)
     
-
-    console.log("object in directory:",tree)
     let dataSave = {
         url:url,
         token: token,
@@ -680,7 +678,7 @@ function deleteDuplicate(fieldForFilter, arrayOfObjects) {
 }
 
 // Process Vulns Table with load, add, or delete
-async function processVulnsTable(token, action, vulns, name) {
+async function processVulnsTable(token, action, vulns) {
 
     let currentTable = await database['vuln'].findOne({token: token});
     let currentVulns = currentTable ? currentTable['vulns'] : [];
