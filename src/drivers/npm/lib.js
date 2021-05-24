@@ -1,13 +1,13 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.3"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
 async function checkCms(url){
@@ -54,9 +54,8 @@ async function getDicGobuster(url){
 }
 
 // get technologies of website with whatweb
-async function getTechWhatWeb(url){
-    console.log(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`);
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}`)
+async function getTechWhatWeb(url,token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whatweb?url=${url}&token=${token}`)
     return result.body
 }
 

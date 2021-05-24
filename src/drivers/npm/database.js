@@ -13,9 +13,9 @@ class databaseHandle{
                 links:Array,
             },
             'dic':{
-                token: String,
                 url:String,
-                dic:Object
+                token: String,
+                dic :String
             },
             'wapp':{
                 token: String,
@@ -53,7 +53,7 @@ class databaseHandle{
             'dig':{
                 token: String,
                 url:String,
-                dns:Array
+                dns:String
             },
             'fierce':{
                 token: String,
@@ -133,8 +133,8 @@ class databaseHandle{
                 joomscan:Object,
                 nikto:Object,
                 vulns: Object,
-                time_create:String
-
+                time_create:String,
+                token: String
             }
         }
         this.mapSchema = {}
@@ -191,12 +191,12 @@ class databaseHandle{
     }
     async add(obj){
         let result = new this.modelTable(obj)
-        await result.save(err=>{
-            if (err) {
-                console.log(err)
-                return
-            }
-        })
+        try{
+            let check = await result.save()
+            return check
+        } catch(err){
+            console.log(err.stack)
+        }
     }
     async findOne(target){
         return await (this.modelTable.findOne(target)).exec()

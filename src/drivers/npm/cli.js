@@ -106,14 +106,15 @@ async function startWep(database, url, token, _options) {
         report['vulns'] = await getVulnsFromExploitDB(report)
 
         report['token'] = token;
-        await database['wapp'].add(report)
+        
+      
+        await wappalyzer.destroy()
+        let check = await database['wapp'].add(report)
 
-
+        return check
         // process.stdout.write(
         //     `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
         // )
-
-        await wappalyzer.destroy()
 
         //process.exit(0)
     } catch (error) {
