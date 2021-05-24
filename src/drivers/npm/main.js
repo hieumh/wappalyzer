@@ -408,7 +408,6 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    console.log("object in whois:", domainInfor)
     let dataSend = await database['whois'].add({
         url:url,
         domains:domainInfor,
@@ -449,10 +448,15 @@ app.post('/url_analyze/server', async (req,res)=>{
     let token = req.body.token;
 
     let serverInfor = await getServerInfor(url, token)
+    try{
+        serverInfor = JSON.parse(serverInfor);
+    } catch(error) {
+        console.log(error);
+    }
 
     await database['server'].add({
         url:url,
-        server:serverInfor,
+        server:serverInfor['nmap'],
         token: token,
         vulns: serverInfor['vulns']
     })
@@ -676,7 +680,7 @@ function deleteDuplicate(fieldForFilter, arrayOfObjects) {
 }
 
 // Process Vulns Table with load, add, or delete
-async function processVulnsTable(token, action, vulns) {
+async function processVulnsTable(token, action, vulns, name) {
 
     let currentTable = await database['vuln'].findOne({token: token});
     let currentVulns = currentTable ? currentTable['vulns'] : [];
