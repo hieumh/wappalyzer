@@ -2,13 +2,13 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.3"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -354,17 +354,16 @@ function countExist(unionList){
     return result
 }
 
-function intersectionListObject(key,listA=[],listB=[],listC=[],listD=[],listE=[]){
+function intersectionListObject(key,unionList){
     if(!key){
         return []
     }
-    let tempA = listA ? listA : []
-    let tempB = listB ? listB : []
-    let tempC = listC ? listC : []
-    let tempD = listD ? listD : []
-    let tempE = listE ? listE : []
 
-    let unionList = [...tempA,...tempB,...tempC,...tempD,...tempE]
+    if(!unionList.length)
+    {
+        return []
+    }
+
     let intersecListKeys = {}
     let result = []
 

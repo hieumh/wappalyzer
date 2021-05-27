@@ -32,7 +32,8 @@ const {search,
     filterFramework,
     filterLanguage,
     intersectionListObject,
-    intersectionList
+    intersectionList,
+    countExist
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -307,12 +308,11 @@ app.post('/url_analyze/dic',async (req,res)=>{
     // save to database
     let tree = createTree(arr)
     delete Object.assign(tree, {["/"]: tree[""] })[""];
-    tree = new Object(tree)
-    
+
     let dataSave = {
         url:url,
         token: token,
-        trees:tree
+        trees:JSON.stringify(tree)
     }
 
     let dataResult = await database['dic'].add(dataSave)
@@ -763,8 +763,8 @@ app.post("/create_report",async (req,res)=>{
     data['time_create'] = time
 
     data['token'] = token;
-    data['programing_language'] = intersectionListObject("name",data['wapp']['programing_language'],data['netcraft']['programing_language'],data['largeio']['programing_language'],data['webtech']['programing_language'],data['whatweb']['programing_language'])
-    data['framework'] = intersectionListObject("name",data['wapp']['framework'],data['netcraft']['framework'],data['largeio']['framework'],data['webtech']['framework'],data['whatweb']['framework'])
+    data['programing_language'] = intersectionListObject("name",[...data['wapp']['programing_language'],...data['netcraft']['programing_language'],...data['largeio']['programing_language'],...data['webtech']['programing_language'],...data['whatweb']['programing_language']])
+    data['framework'] = intersectionListObject("name",[...data['wapp']['framework'],...data['netcraft']['framework'],...data['largeio']['framework'],...data['webtech']['framework'],...data['whatweb']['framework']])
 
     await database['report'].add(data)
 
