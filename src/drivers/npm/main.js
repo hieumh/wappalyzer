@@ -29,6 +29,7 @@ const {search,
     deleteDuplicate,
     fiveMostCommonUrls,
     fiveMostCommonVulns,
+    fiveMostCommonWafs,
     filterFramework,
     filterLanguage,
     intersectionListObject,
@@ -846,6 +847,24 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
             }, []);
 
             res.send(fiveMostCommonVulns(arrayOfVulns));
+        }
+        // If type is waf
+        if (type === 'waf') {
+            let listWafsEachReport = [];
+            let arrayOfWafs = arrayOfReports.reduce((result, report) => {
+                console.log(report.wafw00f.waf);
+                listWafsEachReport = report.wafw00f.waf.reduce((a, v) => {
+                    if (v.firewall !== 'None'){
+                        a.push(v);
+                    }
+                    return a;
+                },[]);
+
+                return (result.concat(listWafsEachReport));
+
+            }, []);
+
+            res.send(fiveMostCommonWafs(arrayOfWafs));
         }
     }
 });
