@@ -246,6 +246,19 @@ function createTree(arr){
 }
 
 
+// Delete all duplicate vulns 
+function deleteDuplicate(fieldForFilter, arrayOfObjects) {
+    let arr
+    try {
+        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
+    } catch(error){
+        console.error(error)
+    }
+    let mapArr = new Map(arr);
+    arrayOfObjects = [...mapArr.values()];
+    return arrayOfObjects;
+}
+
 // Find the most common element in an array
 function fiveMostCommonUrls(arrayOfUrls) {
     // Generate an array of arrays which have this format [ [element, occurences],...]
@@ -368,6 +381,7 @@ function intersectionListObject(key,listA=[],listB=[],listC=[],listD=[],listE=[]
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
+module.exports.deleteDuplicate = deleteDuplicate
 module.exports.fiveMostCommonUrls = fiveMostCommonUrls
 module.exports.fiveMostCommonVulns = fiveMostCommonVulns
 

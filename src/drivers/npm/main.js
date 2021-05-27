@@ -26,6 +26,7 @@ const {search,
     niktoScan,
     checkCms,
     searchSploit,
+    deleteDuplicate,
     fiveMostCommonUrls,
     fiveMostCommonVulns,
     filterFramework,
@@ -647,20 +648,6 @@ app.get('/search_database', async (req, res) => {
     }
 });
 
-
-// Delete all duplicate vulns 
-function deleteDuplicate(fieldForFilter, arrayOfObjects) {
-    let arr
-    try {
-        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
-    } catch(error){
-        console.error(error)
-    }
-    let mapArr = new Map(arr);
-    arrayOfObjects = [...mapArr.values()];
-    return arrayOfObjects;
-}
-
 // Process Vulns Table with load, add, or delete
 async function processVulnsTable(token, action, vulns) {
 
@@ -809,6 +796,18 @@ app.get('/dashboard/num_framework', async (req,res)=>{
     }
     res.send(intersecList.length.toString())
 })
+
+app.get('/dashboard/num_vuln', async (req, res) => {
+    let arrayOfReports = await database['report'].getTable({});
+
+    let arrayOfVulns = arrayOfReports.reduce((result, report) => {
+        return result.concat(report.vulns);
+    }, []);
+    console.log(arrayOfVulns);
+
+    arrayOfVulns = deleteDuplicate('Title', arrayOfVulns);
+    console.log(arrayOfVulns.length);
+});
 
 app.get("/dashboard/language_ratio",async (req,res)=>{
     let listReport = await database['report'].getTable({})
