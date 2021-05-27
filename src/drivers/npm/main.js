@@ -803,10 +803,10 @@ app.get('/dashboard/num_vuln', async (req, res) => {
     let arrayOfVulns = arrayOfReports.reduce((result, report) => {
         return result.concat(report.vulns);
     }, []);
-    console.log(arrayOfVulns);
 
     arrayOfVulns = deleteDuplicate('Title', arrayOfVulns);
-    console.log(arrayOfVulns.length);
+    
+    res.send(arrayOfVulns.length.toString());
 });
 
 app.get("/dashboard/language_ratio",async (req,res)=>{
