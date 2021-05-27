@@ -21,19 +21,25 @@ class databaseHandle{
                 token: String,
                 url:String,
                 technologies: Array,
-                vulns: Array
+                vulns: Array,
+                programing_language:Array,
+                framework:Array,
             },
             'whatweb':{
                 token: String,
                 url:String, 
                 technologies: Array,
-                vulns: Array
+                vulns: Array,
+                programing_language:Array,
+                framework:Array,
             },
             'webtech':{
                 token: String,
                 url:String, 
                 technologies: Array,
-                vulns: Array
+                vulns: Array,
+                programing_language:Array,
+                framework:Array,
             },
             'whois':{
                 token: String,
@@ -70,13 +76,17 @@ class databaseHandle{
                 token: String,
                 url:String,
                 technologies:Array,
-                vulns: Array
+                vulns: Array,
+                programing_language:Array,
+                framework:Array,
             },
             'largeio':{
                 token: String,
                 url:String,
                 technologies:Array,
-                vulns: Array
+                vulns: Array,
+                programing_language:Array,
+                framework:Array,
             },
             'wafw00f':{
                 token: String,
@@ -133,6 +143,8 @@ class databaseHandle{
                 joomscan:Object,
                 nikto:Object,
                 vulns: Object,
+                programing_language:Array,
+                framework:Array,
                 time_create:String,
                 token: String
             }
