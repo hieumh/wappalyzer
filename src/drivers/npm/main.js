@@ -647,34 +647,6 @@ app.get('/search_database', async (req, res) => {
     }
 });
 
-app.get('/get_five_most_common', async (req, res) => {
-    // Get the most common of url or vuln ?
-    let {type} = req.query;
-    // Get all reports from database
-    let arrayOfReports = await database['report'].getTable({});
-    // Check if reports array is empty
-    if (arrayOfReports.length === 0){
-        res.send([]);
-    } else {
-            // If type is url
-        if (type === 'url') {
-            let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
-                result.push(report.url);
-                return result;
-            }, []);
-
-            res.send(fiveMostCommonUrls(arrayOfUrls));
-        }
-        // If type is vuln
-        if (type === 'vuln') {
-           let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
-                return resultAllReports.concat(report.vulns);
-            }, []);
-
-            res.send(fiveMostCommonVulns(arrayOfVulns));
-        }
-    }
-});
 
 // Delete all duplicate vulns 
 function deleteDuplicate(fieldForFilter, arrayOfObjects) {
@@ -849,6 +821,35 @@ app.get("/dashboard/language_ratio",async (req,res)=>{
     let dataSend = countExist(unionList)
     res.send(dataSend)
 })
+
+app.get('/dashboard/get_five_most_common', async (req, res) => {
+    // Get the most common of url or vuln ?
+    let {type} = req.query;
+    // Get all reports from database
+    let arrayOfReports = await database['report'].getTable({});
+    // Check if reports array is empty
+    if (arrayOfReports.length === 0){
+        res.send([]);
+    } else {
+            // If type is url
+        if (type === 'url') {
+            let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
+                result.push(report.url);
+                return result;
+            }, []);
+
+            res.send(fiveMostCommonUrls(arrayOfUrls));
+        }
+        // If type is vuln
+        if (type === 'vuln') {
+           let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
+                return resultAllReports.concat(report.vulns);
+            }, []);
+
+            res.send(fiveMostCommonVulns(arrayOfVulns));
+        }
+    }
+});
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000")
