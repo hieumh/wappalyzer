@@ -296,9 +296,13 @@ function filterFramework(techsInDatabase){
     })
 }
 
-function intersection(listA, listB){
+function intersectionList(listA, listB){
     let tempA = listA ? listA : []
     let tempB = listB ? listB : []
+
+    if(!(tempA.length + tempB.length)){
+        return []
+    }
 
     let unionList = [...tempA,...tempB]
     let intersecListKeys = {}
@@ -310,6 +314,29 @@ function intersection(listA, listB){
 
     for (let name in intersecListKeys){
         result.push(name)
+    }
+    return result
+}
+
+function countExist(unionList){
+    if(!unionList.length){
+        return []
+    }
+
+    let objCount = {}
+    let result = []
+
+    for (let element of unionList){
+        objCount[element]={}
+        objCount[element]['count'] = objCount[element]['count'] === undefined ? 1 : objCount[element]['count']+1
+    }
+
+    for (let key in objCount){
+        let temp = {}
+        temp['language'] = key
+        temp['count'] = objCount[key]['count']
+
+        result.push(temp)
     }
     return result
 }
@@ -368,7 +395,8 @@ module.exports.readFile = readFile
 module.exports.filterLanguage = filterLanguage
 module.exports.filterFramework =filterFramework
 module.exports.intersectionListObject = intersectionListObject
-module.exports.intersection = intersection
+module.exports.intersectionList = intersectionList
+module.exports.countExist = countExist
 
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase

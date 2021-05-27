@@ -31,7 +31,7 @@ const {search,
     filterFramework,
     filterLanguage,
     intersectionListObject,
-    intersection
+    intersectionList
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -822,7 +822,7 @@ app.get('/dashboard/num_tech', async (req,res)=>{
 
     let intersecList = []
     for (let report of listReport){
-        intersecList = intersection(intersecList, report['programing_language'])
+        intersecList = intersectionList(intersecList, report['programing_language'])
     }
     
     res.send(intersecList.length.toString())
@@ -833,13 +833,21 @@ app.get('/dashboard/num_framework', async (req,res)=>{
 
     let intersecList = []
     for (let report of listReport){
-        intersecList = intersection(intersecList, report['num_framework'])
+        intersecList = intersectionList(intersecList, report['framework'])
     }
     res.send(intersecList.length.toString())
 })
 
 app.get("/dashboard/language_ratio",async (req,res)=>{
+    let listReport = await database['report'].getTable({})
 
+    let unionList = []
+    for (let report of listReport){
+        unionList.push(...report["programing_language"])
+    }
+
+    let dataSend = countExist(unionList)
+    res.send(dataSend)
 })
 
 app.listen(3000, () => {
