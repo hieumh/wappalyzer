@@ -26,8 +26,10 @@ const {search,
     niktoScan,
     checkCms,
     searchSploit,
+    deleteDuplicate,
     fiveMostCommonUrls,
     fiveMostCommonVulns,
+    fiveMostCommonWafs,
     filterFramework,
     filterLanguage,
     intersectionListObject,
@@ -647,20 +649,6 @@ app.get('/search_database', async (req, res) => {
     }
 });
 
-
-// Delete all duplicate vulns 
-function deleteDuplicate(fieldForFilter, arrayOfObjects) {
-    let arr
-    try {
-        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
-    } catch(error){
-        console.error(error)
-    }
-    let mapArr = new Map(arr);
-    arrayOfObjects = [...mapArr.values()];
-    return arrayOfObjects;
-}
-
 // Process Vulns Table with load, add, or delete
 async function processVulnsTable(token, action, vulns) {
 
@@ -810,6 +798,18 @@ app.get('/dashboard/num_framework', async (req,res)=>{
     res.send(intersecList.length.toString())
 })
 
+app.get('/dashboard/num_vuln', async (req, res) => {
+    let arrayOfReports = await database['report'].getTable({});
+
+    let arrayOfVulns = arrayOfReports.reduce((result, report) => {
+        return result.concat(report.vulns);
+    }, []);
+
+    arrayOfVulns = deleteDuplicate('Title', arrayOfVulns);
+    
+    res.send(arrayOfVulns.length.toString());
+});
+
 app.get("/dashboard/language_ratio",async (req,res)=>{
     let listReport = await database['report'].getTable({})
 
@@ -859,6 +859,24 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
             }, []);
 
             res.send(fiveMostCommonVulns(arrayOfVulns));
+        }
+        // If type is waf
+        if (type === 'waf') {
+            let listWafsEachReport = [];
+            let arrayOfWafs = arrayOfReports.reduce((result, report) => {
+                console.log(report.wafw00f.waf);
+                listWafsEachReport = report.wafw00f.waf.reduce((a, v) => {
+                    if (v.firewall !== 'None'){
+                        a.push(v);
+                    }
+                    return a;
+                },[]);
+
+                return (result.concat(listWafsEachReport));
+
+            }, []);
+
+            res.send(fiveMostCommonWafs(arrayOfWafs));
         }
     }
 });

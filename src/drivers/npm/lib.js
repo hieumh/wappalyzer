@@ -2,13 +2,13 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -246,15 +246,26 @@ function createTree(arr){
 }
 
 
+// Delete all duplicate vulns 
+function deleteDuplicate(fieldForFilter, arrayOfObjects) {
+    let arr
+    try {
+        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
+    } catch(error){
+        console.error(error)
+    }
+    let mapArr = new Map(arr);
+    arrayOfObjects = [...mapArr.values()];
+    return arrayOfObjects;
+}
+
 // Find the most common element in an array
 function fiveMostCommonUrls(arrayOfUrls) {
     // Generate an array of arrays which have this format [ [element, occurences],...]
     return Object.entries(arrayOfUrls.reduce((a, v) => {
             a[v] = a[v] ? a[v] + 1 : 1;
             return a;
-        }, {})).sort((a, b) => { 
-            return b[1] - a[1];
-        }).slice(0, 5).reduce((a, v) => {
+        }, {})).sort((a, b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
             let obj = {};
             obj['url'] = v[0];
             obj['count'] = v[1];
@@ -266,12 +277,11 @@ function fiveMostCommonUrls(arrayOfUrls) {
 function fiveMostCommonVulns(arrayOfVulns) {
     let arr = arrayOfVulns.map((vuln) => { return [vuln.Title, vuln]; });
     let mapArr = new Map(arr);
-    let topFive = Object.entries(arrayOfVulns.reduce((a, v) => {
+
+    return  Object.entries(arrayOfVulns.reduce((a, v) => {
         a[v.Title] = a[v.Title] ? a[v.Title] + 1 : 1;
         return a;
-    }, {})).sort((a,b) => {
-        return b[1] - a[1];
-    }).slice(0, 5).reduce((a, v) => {
+    }, {})).sort((a,b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
         let obj = {};
         obj['vuln'] = mapArr.get(v[0]);
         obj['count'] = v[1];
@@ -279,7 +289,22 @@ function fiveMostCommonVulns(arrayOfVulns) {
         return a;
     }, []);
 
-    return topFive;
+}
+
+function fiveMostCommonWafs(arrayOfWafs) {
+    let arr = arrayOfWafs.map((waf) => { return [waf.firewall, waf]; });
+    let mapArr = new Map(arr);
+
+    return Object.entries(arrayOfWafs.reduce((a, v) => {
+        a[v.firewall] = a[v.firewall] ? a[v.firewall] + 1 : 1;
+        return a;
+    }, {})).sort((a, b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
+        let obj = {};
+        obj['waf'] = mapArr.get(v[0]);
+        obj['count'] = v[1];
+        a.push(obj);
+        return a;
+    }, []);
 }
 
 
@@ -367,8 +392,10 @@ function intersectionListObject(key,unionList){
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
+module.exports.deleteDuplicate = deleteDuplicate
 module.exports.fiveMostCommonUrls = fiveMostCommonUrls
 module.exports.fiveMostCommonVulns = fiveMostCommonVulns
+module.exports.fiveMostCommonWafs = fiveMostCommonWafs
 
 module.exports.search = search
 module.exports.treeParse = treeParse
