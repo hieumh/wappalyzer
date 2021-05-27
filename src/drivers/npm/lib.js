@@ -318,7 +318,7 @@ function intersectionList(listA, listB){
     return result
 }
 
-function countExist(unionList){
+function countExist(unionList,field){
     if(!unionList.length){
         return []
     }
@@ -333,7 +333,7 @@ function countExist(unionList){
 
     for (let key in objCount){
         let temp = {}
-        temp['language'] = key
+        temp[field] = key
         temp['count'] = objCount[key]['count']
 
         result.push(temp)

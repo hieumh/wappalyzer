@@ -818,7 +818,19 @@ app.get("/dashboard/language_ratio",async (req,res)=>{
         unionList.push(...report["programing_language"])
     }
 
-    let dataSend = countExist(unionList)
+    let dataSend = countExist(unionList,"programing_language")
+    res.send(dataSend)
+})
+
+app.get('/dashboard/framework_ratio',async (req,res)=>{
+    let listReport = await database['report'].getTable({})
+
+    let unionList = []
+    for (let report of listReport){
+        unionList.push(...report["framework"])
+    }
+
+    let dataSend = countExist(unionList,'framework')
     res.send(dataSend)
 })
 
