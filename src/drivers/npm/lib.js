@@ -233,10 +233,46 @@ function createTree(arr){
     return obj
 }
 
+// Find the most common element in an array
+function fiveMostCommonUrls(arrayOfUrls) {
+    // Generate an array of arrays which have this format [ [element, occurences],...]
+    return Object.entries(arrayOfUrls.reduce((a, url) => {
+            a[url] = a[url] ? a[url] + 1 : 1;
+            return a;
+        }, {})).sort((ele1, ele2) => { 
+            return ele2[1] - ele1[1];
+        }).slice(0, 5).reduce( (a, v) => {
+            let obj = {};
+            obj['url'] = v[0];
+            obj['count'] = v[1];
+            a.push(obj);
+            return a;
+        }, [])
+}
+
+function fiveMostCommonVulns(arrayOfVulns) {
+    let arr = arrayOfVulns.map( (vuln) => { return [vuln.Title, vuln]; });
+    let mapArr = new Map(arr);
+    let topFive = Object.entries(arrayOfVulns.reduce( (a, v) => {
+        a[v.Title] = a[v.Title] ? a[v.Title] + 1 : 1;
+        return a;
+    }, {})).slice(0, 5).reduce ( (a, v) => {
+        let obj = {};
+        obj['vuln'] = mapArr.get(v[0]);
+        obj['count'] = v[1];
+        a.push(obj);
+        return a;
+    }, []);
+
+    return topFive;
+}
+
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
+module.exports.fiveMostCommonUrls = fiveMostCommonUrls
+module.exports.fiveMostCommonVulns = fiveMostCommonVulns
 
 module.exports.search = search
 module.exports.treeParse = treeParse

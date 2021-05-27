@@ -26,7 +26,9 @@ const {search,
     joomScan,
     niktoScan,
     checkCms,
-    searchSploit
+    searchSploit,
+    fiveMostCommonUrls,
+    fiveMostCommonVulns
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -430,7 +432,7 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
         url:url,
         domains:domainInfor.subdomains,
         token: token
-    })
+    })    
     res.send(dataSend)
 })
 /////////////////////////////////////////////////////
@@ -644,6 +646,34 @@ app.get('/search_database', async (req, res) => {
     }
 });
 
+app.get('/get_five_most_common', async (req, res) => {
+    // Get the most common of url or vuln ?
+    let {type} = req.query;
+    // Get all reports from database
+    let arrayOfReports = await database['report'].getTable({});
+    // Check if reports array is empty
+    if (arrayOfReports.length === 0){
+        res.send([]);
+    }
+    // If type is url
+    if (type === 'url') {
+        let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
+            result.push(report.url);
+            return result;
+        }, []);
+
+        res.send(fiveMostCommonUrls(arrayOfUrls));
+    }
+    // If type is vuln
+    if (type === 'vuln') {
+        let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
+            return resultAllReports.concat(report.vulns);
+        }, []);
+
+        res.send(fiveMostCommonVulns(arrayOfVulns));
+    }
+});
+
 // Delete all duplicate vulns 
 function deleteDuplicate(fieldForFilter, arrayOfObjects) {
     let arr
@@ -763,7 +793,7 @@ app.post("/create_report",async (req,res)=>{
     })
 
     await database['vuln'].getTable({token: token}, {_id: 0, token: 0}).then((result) => {
-        data['vulns'] = result[0] ? result[0] : ""
+        data['vulns'] = result[0] ? [...result[0].vulns] : ""
     })
 
     data['url'] = url
