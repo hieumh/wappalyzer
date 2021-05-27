@@ -864,7 +864,6 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
         if (type === 'waf') {
             let listWafsEachReport = [];
             let arrayOfWafs = arrayOfReports.reduce((result, report) => {
-                console.log(report.wafw00f.waf);
                 listWafsEachReport = report.wafw00f.waf.reduce((a, v) => {
                     if (v.firewall !== 'None'){
                         a.push(v);
