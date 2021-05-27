@@ -655,23 +655,24 @@ app.get('/get_five_most_common', async (req, res) => {
     // Check if reports array is empty
     if (arrayOfReports.length === 0){
         res.send([]);
-    }
-    // If type is url
-    if (type === 'url') {
-        let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
-            result.push(report.url);
-            return result;
-        }, []);
+    } else {
+            // If type is url
+        if (type === 'url') {
+            let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
+                result.push(report.url);
+                return result;
+            }, []);
 
-        res.send(fiveMostCommonUrls(arrayOfUrls));
-    }
-    // If type is vuln
-    if (type === 'vuln') {
-        let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
-            return resultAllReports.concat(report.vulns);
-        }, []);
+            res.send(fiveMostCommonUrls(arrayOfUrls));
+        }
+        // If type is vuln
+        if (type === 'vuln') {
+           let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
+                return resultAllReports.concat(report.vulns);
+            }, []);
 
-        res.send(fiveMostCommonVulns(arrayOfVulns));
+            res.send(fiveMostCommonVulns(arrayOfVulns));
+        }
     }
 });
 

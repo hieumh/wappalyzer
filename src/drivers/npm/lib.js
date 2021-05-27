@@ -2,13 +2,13 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -249,12 +249,12 @@ function createTree(arr){
 // Find the most common element in an array
 function fiveMostCommonUrls(arrayOfUrls) {
     // Generate an array of arrays which have this format [ [element, occurences],...]
-    return Object.entries(arrayOfUrls.reduce((a, url) => {
-            a[url] = a[url] ? a[url] + 1 : 1;
+    return Object.entries(arrayOfUrls.reduce((a, v) => {
+            a[v] = a[v] ? a[v] + 1 : 1;
             return a;
-        }, {})).sort((ele1, ele2) => { 
-            return ele2[1] - ele1[1];
-        }).slice(0, 5).reduce( (a, v) => {
+        }, {})).sort((a, b) => { 
+            return b[1] - a[1];
+        }).slice(0, 5).reduce((a, v) => {
             let obj = {};
             obj['url'] = v[0];
             obj['count'] = v[1];
@@ -264,12 +264,14 @@ function fiveMostCommonUrls(arrayOfUrls) {
 }
 
 function fiveMostCommonVulns(arrayOfVulns) {
-    let arr = arrayOfVulns.map( (vuln) => { return [vuln.Title, vuln]; });
+    let arr = arrayOfVulns.map((vuln) => { return [vuln.Title, vuln]; });
     let mapArr = new Map(arr);
-    let topFive = Object.entries(arrayOfVulns.reduce( (a, v) => {
+    let topFive = Object.entries(arrayOfVulns.reduce((a, v) => {
         a[v.Title] = a[v.Title] ? a[v.Title] + 1 : 1;
         return a;
-    }, {})).slice(0, 5).reduce ( (a, v) => {
+    }, {})).sort((a,b) => {
+        return b[1] - a[1];
+    }).slice(0, 5).reduce((a, v) => {
         let obj = {};
         obj['vuln'] = mapArr.get(v[0]);
         obj['count'] = v[1];
