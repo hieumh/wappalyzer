@@ -341,17 +341,16 @@ function countExist(unionList){
     return result
 }
 
-function intersectionListObject(key,listA=[],listB=[],listC=[],listD=[],listE=[]){
+function intersectionListObject(key,unionList){
     if(!key){
         return []
     }
-    let tempA = listA ? listA : []
-    let tempB = listB ? listB : []
-    let tempC = listC ? listC : []
-    let tempD = listD ? listD : []
-    let tempE = listE ? listE : []
 
-    let unionList = [...tempA,...tempB,...tempC,...tempD,...tempE]
+    if(!unionList.length)
+    {
+        return []
+    }
+
     let intersecListKeys = {}
     let result = []
 
