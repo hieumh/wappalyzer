@@ -31,7 +31,8 @@ const {search,
     filterFramework,
     filterLanguage,
     intersectionListObject,
-    intersectionList
+    intersectionList,
+    countExist
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -306,12 +307,11 @@ app.post('/url_analyze/dic',async (req,res)=>{
     // save to database
     let tree = createTree(arr)
     delete Object.assign(tree, {["/"]: tree[""] })[""];
-    tree = new Object(tree)
-    
+
     let dataSave = {
         url:url,
         token: token,
-        trees:tree
+        trees:JSON.stringify(tree)
     }
 
     let dataResult = await database['dic'].add(dataSave)
