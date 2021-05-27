@@ -10,7 +10,6 @@ const addCve = require('./lib')
 const {search,
     getVulnsForNetcraft,
     getVulnsFromExploitDB,
-    createFile,
     createTree,
     getDnsDig,
     getDnsFierce,
@@ -26,7 +25,10 @@ const {search,
     joomScan,
     niktoScan,
     checkCms,
-    searchSploit
+    filterFramework,
+    filterLanguage,
+    intersectionListObject,
+    intersection
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -34,6 +36,7 @@ const largeio = require("./tools/largeio/largeio")
 // Add uuidv
 const uuidv4 = require('uuid')
 const { ServerResponse } = require('http')
+const { technologies } = require('./wappalyzer')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
@@ -63,7 +66,6 @@ database['nikto'] = new databaseHandle('nikto')
 
 // Create vuln collection
 database['vuln'] = new databaseHandle('vuln');
-
 database['report'] = new databaseHandle('report')
 
 
@@ -81,7 +83,6 @@ app.use((req,res,next) =>{
     res.append('Access-Control-Allow-Headers', 'Origin,Content-Type,Cache-Control,Authorization');
     next();
 })
-
 
 // app.get('/*', (req, res) => {
 //     res.sendFile(path.join(__dirname, 'build', 'index.html'))
@@ -154,10 +155,9 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
         technologies:dataRecv.technologies
     })
 
-    // Add token to result
+    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
+    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token
-
-    // Add vulns to result
     dataSend['vulns'] = await getVulnsForNetcraft(dataRecv);
 
     // Add vulns to Vulns Table
@@ -191,11 +191,10 @@ app.post('/url_analyze/largeio', async (req,res)=>{
         url:url,
         technologies:tech
     })
-    
-    // Add token to result
-    dataSend['token'] = token
 
-    // Add vulns to result
+    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
+    dataSend['framework'] = filterFramework(dataSend['technologies'])
+    dataSend['token'] = token
     dataSend['vulns'] = await getVulnsFromExploitDB(dataRecv);
 
     // Add vulns to Vulns Table
@@ -217,7 +216,6 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
         console.error(err)
     }
     
-
     let tech
     if(JSON.stringify(dataRecv.technologies) === "[]" || !dataRecv.technologies){
         tech = []
@@ -230,6 +228,8 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
         technologies:tech
     })
     
+    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
+    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
@@ -264,6 +264,8 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         technologies:tech
     })
     
+    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
+    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
@@ -308,8 +310,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
         token: token,
         trees:tree
     }
-
-    console.log("this is dic:",dataSave)
 
     let dataResult = await database['dic'].add(dataSave)
 
@@ -769,25 +769,45 @@ app.post("/create_report",async (req,res)=>{
     data['url'] = url
 
     let time = new Date()
-    data['time_create'] =   time
+    data['time_create'] = time
 
     data['token'] = token;
+    data['programing_language'] = intersectionListObject("name",data['wapp']['programing_language'],data['netcraft']['programing_language'],data['largeio']['programing_language'],data['webtech']['programing_language'],data['whatweb']['programing_language'])
+    data['framework'] = intersectionListObject("name",data['wapp']['framework'],data['netcraft']['framework'],data['largeio']['framework'],data['webtech']['framework'],data['whatweb']['framework'])
 
-    await database['report'].add(data, token)
+    await database['report'].add(data)
 
     res.send("create database success")
 })
 
-app.get('/create_file', async (req,res)=>{
-    let {time} = req.params
-    let reportJson = await database['report'].findOne({time_create:time})
+app.get('/dashboard/num_report', async (req,res)=>{
+    let listReport = await database['report'].getTable({})
+    res.send(listReport.length.toString())
+})
 
-    let createStatus = await createFile(reportJson)
-    if(createStatus){
-        res.sendFile("/report.html")
-    } else {
-        res.send("Error")
+app.get('/dashboard/num_tech', async (req,res)=>{
+    let listReport = await database['report'].getTable({})
+
+    let intersecList = []
+    for (let report of listReport){
+        intersecList = intersection(intersecList, report['programing_language'])
     }
+    
+    res.send(intersecList.length.toString())
+})
+
+app.get('/dashboard/num_framework', async (req,res)=>{
+    let listReport = await database['report'].getTable({})
+
+    let intersecList = []
+    for (let report of listReport){
+        intersecList = intersection(intersecList, report['num_framework'])
+    }
+    res.send(intersecList.length.toString())
+})
+
+app.get("/dashboard/language_ratio",async (req,res)=>{
+
 })
 
 app.listen(3000, () => {

@@ -1,14 +1,19 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
+const fs = require('fs')
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.3"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
+
+let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
+
+let framework = readFile("./alphabet_programing_language/framework.txt").split("\n").map(element=>element.trim().toLowerCase())
 
 async function checkCms(url){
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/cmseek?url=${url}`)
@@ -183,10 +188,17 @@ async function getVulnsForNetcraft(data) {
     return vulns;
 }
 
-function createFile(jsonInput){
-
+function readFile(link){
+    try {
+        let data = fs.readFileSync(link,'utf8')
+        return data
+    } catch(err){
+        console.error(err)
+        return ""
+    }
 }
 
+// format links before handle
 function handleLink(str){
     let lastPos=-1
     if (str == undefined){
@@ -233,6 +245,60 @@ function createTree(arr){
     return obj
 }
 
+function filterLanguage(techsInDatabase){
+    // [{name:php,..},{name:python,...},{},...]
+    return techsInDatabase.filter(tech=>{
+        return programingLanguage.includes(tech.name.toLowerCase())
+    })
+}
+
+function filterFramework(techsInDatabase){
+    return techsInDatabase.filter(tech=>{
+        return framework.includes(tech.name.toLowerCase())
+    })
+}
+
+function intersection(listA, listB){
+    let tempA = listA ? listA : []
+    let tempB = listB ? listB : []
+
+    let unionList = [...tempA,...tempB]
+    let intersecListKeys = {}
+    let result = []
+
+    for (let element of unionList){
+        intersecListKeys[element] = true
+    }
+
+    for (let name in intersecListKeys){
+        result.push(name)
+    }
+    return result
+}
+
+function intersectionListObject(key,listA=[],listB=[],listC=[],listD=[],listE=[]){
+    if(!key){
+        return []
+    }
+    let tempA = listA ? listA : []
+    let tempB = listB ? listB : []
+    let tempC = listC ? listC : []
+    let tempD = listD ? listD : []
+    let tempE = listE ? listE : []
+
+    let unionList = [...tempA,...tempB,...tempC,...tempD,...tempE]
+    let intersecListKeys = {}
+    let result = []
+
+    for (let obj of unionList){
+        intersecListKeys[obj[key]] = true
+    }
+
+    for (let name in intersecListKeys){
+        result.push(name)
+    }
+    return result
+}
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
@@ -256,8 +322,13 @@ module.exports.droopScan = droopScan
 module.exports.niktoScan = niktoScan
 module.exports.joomScan = joomScan
 module.exports.searchsploit = searchsploit
-module.exports.createFile = createFile
+module.exports.createTree = createTree
 module.exports.checkCms = checkCms
+module.exports.readFile = readFile
+module.exports.filterLanguage = filterLanguage
+module.exports.filterFramework =filterFramework
+module.exports.intersectionListObject = intersectionListObject
+module.exports.intersection = intersection
 
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase
