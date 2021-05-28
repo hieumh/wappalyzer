@@ -380,7 +380,7 @@ function countExist(unionList,field){
     let result = []
 
     for (let element of unionList){
-        objCount[element]={}
+        objCount[element]= objCount[element] ?  objCount[element] : {}
         objCount[element]['count'] = objCount[element]['count'] === undefined ? 1 : objCount[element]['count']+1
     }
 
