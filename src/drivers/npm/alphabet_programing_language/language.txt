@@ -1,4 +1,3 @@
-Microsoft ASP.NET
 A-0 System
 A+
 ABAP
