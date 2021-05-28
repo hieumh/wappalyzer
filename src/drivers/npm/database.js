@@ -233,6 +233,11 @@ class databaseHandle{
     async replaceDocument(condition, replaceObj) {
         await this.modelTable.replaceOne(condition, replaceObj);
     }
+
+    async updateDocument(condition, fieldForUpdate) {
+        await this.modelTable.updateOne(condition, fieldForUpdate);
+    }
+
     async delete(target){
         // delete one function
         await this.modelTable.deleteOne(target, (err)=>{
