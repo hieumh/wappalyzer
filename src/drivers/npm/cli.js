@@ -2,7 +2,7 @@
 
 const Wappalyzer = require('./driver')
 const addCve = require('./lib')
-const { getVulnsFromExploitDB,filterLanguage,filterFramework } = require('./lib')
+const { getVulnsFromExploitDB, updateReport, filterLanguage,filterFramework, intersectionListObject } = require('./lib')
 const { technologies } = require('./wappalyzer')
 let arg
 
@@ -107,9 +107,9 @@ async function startWep(database, url, token, _options) {
         // Find vulns by searchsploit api
         report['vulns'] = await getVulnsFromExploitDB(report)
         report['token'] = token;
-        
       
         await wappalyzer.destroy()
+
         let check = await database['wapp'].add(report)
 
         return check

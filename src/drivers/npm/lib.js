@@ -307,6 +307,35 @@ function fiveMostCommonWafs(arrayOfWafs) {
     }, []);
 }
 
+function initializeReport(url, token) {
+    let fields = ['url','domain', 'dic', 'dig', 'fierce', 'gobuster', 'server','netcraft','largeio', 'wapp', 'whatweb', 'webtech', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'nikto', 'vulns', 'programing_language','framework','time_create','token'];
+    let newReport = {};
+    for (let i = 0; i < fields.length; i++) {
+        newReport[fields[i]] = [];
+    }
+    let time = new Date()
+    newReport['time_create'] = time
+
+    newReport['url'] = url;
+    newReport['token'] = token;
+
+    newReport['programing_language'] = [];
+    newReport['framework'] = [];
+
+    return newReport;
+}
+
+async function updateReport(database, token, tool, data) {
+    //Update wapp to report table
+    let existReport = await database['report'].findOne({token: token});
+
+    await database['report'].updateDocument({token: token}, {
+        [tool]: data, 
+        programing_language: intersectionList([...existReport['programing_language'],...data['programing_language']]), 
+        framework: intersectionList([...existReport['framework'],...data['framework']])
+    });
+}
+
 
 function filterLanguage(techsInDatabase){
     return techsInDatabase.filter(tech=>{
@@ -393,6 +422,8 @@ module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
 module.exports.deleteDuplicate = deleteDuplicate
+module.exports.initializeReport = initializeReport
+module.exports.updateReport = updateReport
 module.exports.fiveMostCommonUrls = fiveMostCommonUrls
 module.exports.fiveMostCommonVulns = fiveMostCommonVulns
 module.exports.fiveMostCommonWafs = fiveMostCommonWafs

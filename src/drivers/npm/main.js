@@ -32,6 +32,8 @@ const {search,
     fiveMostCommonWafs,
     filterFramework,
     filterLanguage,
+    initializeReport,
+    updateReport,
     intersectionListObject,
     intersectionList,
     countExist
@@ -131,9 +133,19 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     let token = req.body.token;
 
+    // Check if report with this token exist ?
+    // If no initailize a new report withi this token
+    let reportExist = await database['report'].findOne({token: token});
+    if (!reportExist) {
+        let report = initializeReport(url, token);
+        await database['report'].add(report);
+    }
+    
+    // wait for analyze successfully    
+    let report = await startWep(database,url, token)
 
-    // wait for analyze successfully
-    let check = await startWep(database,url, token)
+    //Update wapp to report table
+    await updateReport(database, token, 'wapp', report);
 
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
@@ -168,6 +180,9 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
+
+    //Update wapp to report table
+    await updateReport(database, token, 'netcraft', dataSend);
 
     await database['netcraft'].add(dataSend)
     res.send(dataSend)
@@ -206,6 +221,9 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
     
+    //Update wapp to report table
+    await updateReport(database, token, 'largeio', dataSend);
+
     await database['largeio'].add(dataSend)
     res.send(dataSend)
 })
@@ -241,7 +259,10 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
-    
+
+    //Update wapp to report table
+    await updateReport(database, token, 'whatweb', dataSend);
+
     await database['whatweb'].add(dataSend)
     res.send(dataSend)
 })
@@ -277,6 +298,9 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', dataSend['vulns']);
+
+    //Update wapp to report table
+    await updateReport(database, token, 'webtech', dataSend);
 
     await database['webtech'].add(dataSend)
     res.send(dataSend)
@@ -316,6 +340,8 @@ app.post('/url_analyze/dic',async (req,res)=>{
         trees:JSON.stringify(tree)
     }
 
+    await database['report'].updateDocument({token: token}, {dic: dataSave});
+
     let dataResult = await database['dic'].add(dataSave)
 
     res.send(dataResult)
@@ -343,6 +369,9 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
         gobuster:dataRecv,
         token: token
     }
+
+    await database['report'].updateDocument({token: token}, {gobuster: dataSend});
+
     dataSend = await database['gobuster'].add(dataSend)
 
     res.send(dataSend)
@@ -366,6 +395,9 @@ app.post('/url_analyze/dig',async (req,res)=>{
             dns:dnsInfor,
             token: token
         })
+
+        await database['report'].updateDocument({token: token}, {dig: dataSend});
+
     } catch(err){
         console.error(err)
     }
@@ -383,6 +415,9 @@ app.post('/url_analyze/fierce', async (req,res)=>{
         dns:dnsInfor,
         token: token
     })
+
+    await database['report'].updateDocument({token: token}, {fierce: dataSend});
+
     res.send(dataSend)
 })
 ///////////////////////////////////////////////////
@@ -416,6 +451,9 @@ app.post('/url_analyze/whois', async (req,res)=>{
         domains:domainInfor,
         token: token
     })
+
+    await database['report'].updateDocument({token: token}, {whois: dataSend});
+
     res.send(dataSend)
 })
 
@@ -435,7 +473,10 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
         url:url,
         domains:domainInfor.subdomains,
         token: token
-    })    
+    })   
+
+    await database['report'].updateDocument({token: token}, {sublist3r: dataSend});
+
     res.send(dataSend)
 })
 /////////////////////////////////////////////////////
@@ -457,7 +498,7 @@ app.post('/url_analyze/server', async (req,res)=>{
         console.log(error);
     }
 
-    await database['server'].add({
+    let dataSend = await database['server'].add({
         url:url,
         server:serverInfor['nmap'],
         token: token,
@@ -466,6 +507,8 @@ app.post('/url_analyze/server', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', serverInfor['vulns']);
+
+    await database['report'].updateDocument({token: token}, {server: dataSend});
 
     res.send(serverInfor)
 })
@@ -488,11 +531,14 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
         console.error(err)
     }
 
-    await database['wafw00f'].add({
+    let dataSend = await database['wafw00f'].add({
         url:url,
         waf:detectWaf.wafs,
         token: token
     })
+
+    await database['report'].updateDocument({token: token}, {wafw00f: dataSend});
+
     res.send(detectWaf)
 })
 ///////////////////////////////////////////////////
@@ -510,7 +556,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
 
     let wp = await wpScan(url, token)
 
-    await database['wpscan'].add({
+    let dataSend = await database['wpscan'].add({
         url:url,
         wp:wp,
         token: token,
@@ -519,6 +565,8 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', wp['vulns']);
+
+    await database['report'].updateDocument({token: token}, {wpscan: dataSend});
 
     res.send(wp)
 })
@@ -530,7 +578,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     let droope = await droopScan(url)
 
-    await database['droopescan'].add({
+    let dataSend = await database['droopescan'].add({
         url:url,
         droope:droope,
         token: token,
@@ -540,6 +588,8 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', droope['vulns']);
+
+    await database['report'].updateDocument({token: token}, {droopescan: dataSend});
 
     res.send(droope)
 
@@ -553,7 +603,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
 
     let joomscan = await joomScan(url)
 
-    await database['joomscan'].add({
+    let dataSend = await database['joomscan'].add({
         url:url,
         joomscan:joomscan,
         token: token,
@@ -562,6 +612,8 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
 
     // Add vulns to Vulns Table
     await processVulnsTable(token, 'add', joomscan['vulns']);
+
+    await database['report'].updateDocument({token: token}, {joomscan: dataSend});
 
     res.send(joomscan)
 })
@@ -572,7 +624,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 
     let nikto = await niktoScan(url, token)
 
-    await database['nikto'].add({
+    let dataSend = await database['nikto'].add({
         url:url,
         nikto:nikto,
         token: token,
@@ -582,6 +634,8 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     // Add vulns to Vulns Table
     // await processVulnsTable(token, 'add', nikto['vulnerabilities']);
 
+    await database['report'].updateDocument({token: token}, {nikto: dataSend});
+    
     res.send(nikto)
 })
 ///////////////////////////////////////////////////
@@ -672,6 +726,8 @@ async function processVulnsTable(token, action, vulns) {
         let id = currentTable._id;
         let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
     }
+
+    await database['report'].updateDocument({token: token}, {vulns: currentVulns})
 }
 
 app.post('/update_vulns_table', async(req, res) => {
@@ -759,7 +815,6 @@ app.post("/create_report",async (req,res)=>{
     })
 
     data['url'] = url
-
     let time = new Date()
     data['time_create'] = time
 
@@ -844,7 +899,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
     if (arrayOfReports.length === 0){
         res.send([]);
     } else {
-            // If type is url
+        // If type is url
         if (type === 'url') {
             let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
                 result.push(report.url);
