@@ -2,13 +2,13 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.3"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.5"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -338,16 +338,15 @@ async function updateReport(database, token, tool, data) {
 
 
 function filterLanguage(techsInDatabase){
-    // [{name:php,..},{name:python,...},{},...]
     return techsInDatabase.filter(tech=>{
-        return programingLanguage.includes(tech.name.toLowerCase());
-    }).map(element => element.name);
+        return programingLanguage.includes(tech.name.toLowerCase())
+    }).map(element => element.name)
 }
 
 function filterFramework(techsInDatabase){
     return techsInDatabase.filter(tech=>{
         return framework.includes(tech.name.toLowerCase())
-    }).map(element => element.name);
+    }).map(element => element.name)
 }
 
 function intersectionList(listA, listB){
@@ -417,6 +416,7 @@ function intersectionListObject(key,unionList){
     }
     return result
 }
+
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
