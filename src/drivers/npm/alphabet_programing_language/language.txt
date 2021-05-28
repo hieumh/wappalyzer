@@ -1,4 +1,4 @@
-A.NET
+Microsoft ASP.NET
 A-0 System
 A+
 ABAP
@@ -32,7 +32,7 @@ AMOS
 AMPL
 AngelScript
 Apache Pig latin
-Apex 
+Apex
 APL
 App Inventor for Android's visual block language 
 AppleScript

@@ -763,9 +763,10 @@ app.post("/create_report",async (req,res)=>{
     let time = new Date()
     data['time_create'] = time
 
+
     data['token'] = token;
-    data['programing_language'] = intersectionListObject("name",[...data['wapp']['programing_language'],...data['netcraft']['programing_language'],...data['largeio']['programing_language'],...data['webtech']['programing_language'],...data['whatweb']['programing_language']])
-    data['framework'] = intersectionListObject("name",[...data['wapp']['framework'],...data['netcraft']['framework'],...data['largeio']['framework'],...data['webtech']['framework'],...data['whatweb']['framework']])
+    data['programing_language'] = intersectionList([...data['wapp']['programing_language'],...data['netcraft']['programing_language'],...data['largeio']['programing_language'],...data['webtech']['programing_language'],...data['whatweb']['programing_language']])
+    data['framework'] = intersectionList([...data['wapp']['framework'],...data['netcraft']['framework'],...data['largeio']['framework'],...data['webtech']['framework'],...data['whatweb']['framework']])
 
     await database['report'].add(data)
 
