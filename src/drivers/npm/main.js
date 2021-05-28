@@ -873,9 +873,7 @@ app.get("/dashboard/language_ratio",async (req,res)=>{
     for (let report of listReport){
         unionList.push(...report["programing_language"])
     }
-    console.log(unionList)
     let dataSend = countExist(unionList,"programing_language")
-    console.log(dataSend)
     res.send(dataSend)
 })
 
