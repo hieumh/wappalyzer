@@ -27,6 +27,7 @@ const {search,
     checkCms,
     searchSploit,
     deleteDuplicate,
+    processVulnsTable,
     fiveMostCommonUrls,
     fiveMostCommonVulns,
     fiveMostCommonWafs,
@@ -150,7 +151,7 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     // data saved in database, and get it from database
     let dataSend = await database['wapp'].findOne({token:token})
     
-    await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(database, token, 'add', dataSend['vulns']);
 
     res.send(dataSend)
 })
@@ -179,7 +180,7 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     dataSend['vulns'] = await getVulnsForNetcraft(dataRecv);
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(database, token, 'add', dataSend['vulns']);
 
     //Update wapp to report table
     await updateReport(database, token, 'netcraft', dataSend);
@@ -219,7 +220,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     dataSend['vulns'] = await getVulnsFromExploitDB(dataRecv);
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(database, token, 'add', dataSend['vulns']);
     
     //Update wapp to report table
     await updateReport(database, token, 'largeio', dataSend);
@@ -258,7 +259,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     dataSend['vulns'] = dataRecv['vulns'];
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(database, token, 'add', dataSend['vulns']);
 
     //Update wapp to report table
     await updateReport(database, token, 'whatweb', dataSend);
@@ -297,7 +298,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     dataSend['vulns'] = dataRecv['vulns'];
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', dataSend['vulns']);
+    await processVulnsTable(database, token, 'add', dataSend['vulns']);
 
     //Update wapp to report table
     await updateReport(database, token, 'webtech', dataSend);
@@ -506,7 +507,7 @@ app.post('/url_analyze/server', async (req,res)=>{
     })
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', serverInfor['vulns']);
+    await processVulnsTable(database, token, 'add', serverInfor['vulns']);
 
     await database['report'].updateDocument({token: token}, {server: dataSend});
 
@@ -564,7 +565,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     })
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', wp['vulns']);
+    await processVulnsTable(database, token, 'add', wp['vulns']);
 
     await database['report'].updateDocument({token: token}, {wpscan: dataSend});
 
@@ -587,7 +588,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', droope['vulns']);
+    await processVulnsTable(database, token, 'add', droope['vulns']);
 
     await database['report'].updateDocument({token: token}, {droopescan: dataSend});
 
@@ -611,7 +612,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     })
 
     // Add vulns to Vulns Table
-    await processVulnsTable(token, 'add', joomscan['vulns']);
+    await processVulnsTable(database, token, 'add', joomscan['vulns']);
 
     await database['report'].updateDocument({token: token}, {joomscan: dataSend});
 
@@ -704,36 +705,36 @@ app.get('/search_database', async (req, res) => {
 });
 
 // Process Vulns Table with load, add, or delete
-async function processVulnsTable(token, action, vulns) {
+// async function processVulnsTable(token, action, vulns) {
 
-    let currentTable = await database['vuln'].findOne({token: token});
-    let currentVulns = currentTable ? currentTable['vulns'] : [];
+//     let currentTable = await database['vuln'].findOne({token: token});
+//     let currentVulns = currentTable ? currentTable['vulns'] : [];
 
-    if (action === 'add') {
-        currentVulns = currentVulns.concat(vulns);
-        currentVulns = deleteDuplicate('Title',currentVulns);
-    }
+//     if (action === 'add') {
+//         currentVulns = currentVulns.concat(vulns);
+//         currentVulns = deleteDuplicate('Title',currentVulns);
+//     }
 
-    if (action === 'delete') {
-        let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
-        currentVulns.splice(posOfVuln, 1);
-    }
+//     if (action === 'delete') {
+//         let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
+//         currentVulns.splice(posOfVuln, 1);
+//     }
     
-    // Decide first time or many times which adding vulns to database
-    if (!currentTable) {
-        await database['vuln'].add({token: token, vulns: currentVulns});
-    } else {
-        let id = currentTable._id;
-        let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
-    }
+//     // Decide first time or many times which adding vulns to database
+//     if (!currentTable) {
+//         await database['vuln'].add({token: token, vulns: currentVulns});
+//     } else {
+//         let id = currentTable._id;
+//         let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
+//     }
 
-    await database['report'].updateDocument({token: token}, {vulns: currentVulns})
-}
+//     await database['report'].updateDocument({token: token}, {vulns: currentVulns})
+// }
 
 app.post('/update_vulns_table', async(req, res) => {
     
     let {token, action, vulns} = req.body;
-    await processVulnsTable(token, action, vulns);
+    await processVulnsTable(database, token, action, vulns);
     
     let vulnTable = await database['vuln'].getTable({token: token});
 
@@ -741,92 +742,92 @@ app.post('/update_vulns_table', async(req, res) => {
 });
 
 // create report (base on the last result of each table)
-app.post("/create_report",async (req,res)=>{
-    let data = {}
-    let url = req.body.url
-    let token = req.body.token
+// app.post("/create_report",async (req,res)=>{
+//     let data = {}
+//     let url = req.body.url
+//     let token = req.body.token
 
-    await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wapp'] = result[0] ? result[0] : "";
-    })
-    await database['whatweb'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['whatweb'] = result[0] ? result[0] : "";
+//     await database['wapp'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['wapp'] = result[0] ? result[0] : "";
+//     })
+//     await database['whatweb'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['whatweb'] = result[0] ? result[0] : "";
         
-    })
-    await database['webtech'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['webtech'] = result[0] ? result[0] : "";
+//     })
+//     await database['webtech'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['webtech'] = result[0] ? result[0] : "";
 
-    })
-    await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['netcraft'] = result[0] ? result[0] : "";
+//     })
+//     await database['netcraft'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['netcraft'] = result[0] ? result[0] : "";
 
-    })
-    await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['largeio'] = result[0] ? result[0] : "";
+//     })
+//     await database['largeio'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['largeio'] = result[0] ? result[0] : "";
 
-    })
+//     })
     
-    await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['dic'] = result[0] ? result[0] : ""
-    })
-    await database['gobuster'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['gobuster'] = result[0] ? result[0] : ""
-    })
+//     await database['dic'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['dic'] = result[0] ? result[0] : ""
+//     })
+//     await database['gobuster'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['gobuster'] = result[0] ? result[0] : ""
+//     })
 
-    await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['whois'] = result[0] ? result[0] : ""
-    })
-    await database['sublist3r'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['sublist3r'] = result[0] ? result[0] : ""
-    })
+//     await database['whois'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['whois'] = result[0] ? result[0] : ""
+//     })
+//     await database['sublist3r'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['sublist3r'] = result[0] ? result[0] : ""
+//     })
 
-    await database['dig'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['dns'] = result[0] ? result[0] : ""
-    })
-    await database['fierce'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['dns'] = result[0] ? result[0] : ""
-    })
+//     await database['dig'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['dns'] = result[0] ? result[0] : ""
+//     })
+//     await database['fierce'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['dns'] = result[0] ? result[0] : ""
+//     })
 
-    await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['server'] = result[0] ? result[0] : "";
-    })
+//     await database['server'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['server'] = result[0] ? result[0] : "";
+//     })
     
-    await database['wafw00f'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wafw00f'] = result[0] ? result[0] : ""
-    })
+//     await database['wafw00f'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['wafw00f'] = result[0] ? result[0] : ""
+//     })
 
-    await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['wpscan'] = result[0] ? result[0] : "";
-    })
-    await database['droopescan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['droopescan'] = result[0] ? result[0] : "";
-    })
+//     await database['wpscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['wpscan'] = result[0] ? result[0] : "";
+//     })
+//     await database['droopescan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['droopescan'] = result[0] ? result[0] : "";
+//     })
 
-    await database['joomscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['joomscan'] = result[0] ? result[0] : "";
-    })
+//     await database['joomscan'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['joomscan'] = result[0] ? result[0] : "";
+//     })
 
-    await database['nikto'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
-        data['nikto'] = result[0] ? result[0] : ""
-    })
+//     await database['nikto'].getTable({token: token},{_id: 0, token: 0}).then((result)=>{
+//         data['nikto'] = result[0] ? result[0] : ""
+//     })
 
-    await database['vuln'].getTable({token: token}, {_id: 0, token: 0}).then((result) => {
-        data['vulns'] = result[0] ? [...result[0].vulns] : ""
-    })
+//     await database['vuln'].getTable({token: token}, {_id: 0, token: 0}).then((result) => {
+//         data['vulns'] = result[0] ? [...result[0].vulns] : ""
+//     })
 
-    data['url'] = url
-    let time = new Date()
-    data['time_create'] = time
+//     data['url'] = url
+//     let time = new Date()
+//     data['time_create'] = time
 
 
-    data['token'] = token;
-    data['programing_language'] = intersectionList([...data['wapp']['programing_language'],...data['netcraft']['programing_language'],...data['largeio']['programing_language'],...data['webtech']['programing_language'],...data['whatweb']['programing_language']])
-    data['framework'] = intersectionList([...data['wapp']['framework'],...data['netcraft']['framework'],...data['largeio']['framework'],...data['webtech']['framework'],...data['whatweb']['framework']])
+//     data['token'] = token;
+//     data['programing_language'] = intersectionList([...data['wapp']['programing_language'],...data['netcraft']['programing_language'],...data['largeio']['programing_language'],...data['webtech']['programing_language'],...data['whatweb']['programing_language']])
+//     data['framework'] = intersectionList([...data['wapp']['framework'],...data['netcraft']['framework'],...data['largeio']['framework'],...data['webtech']['framework'],...data['whatweb']['framework']])
 
-    await database['report'].add(data)
+//     await database['report'].add(data)
 
-    res.send("create database success")
-})
+//     res.send("create database success")
+// })
 
 app.get('/dashboard/num_report', async (req,res)=>{
     let listReport = await database['report'].getTable({})
