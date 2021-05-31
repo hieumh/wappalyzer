@@ -2,13 +2,13 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -259,6 +259,32 @@ function deleteDuplicate(fieldForFilter, arrayOfObjects) {
     return arrayOfObjects;
 }
 
+async function processVulnsTable(database, token, action, vulns) {
+
+    let currentTable = await database['vuln'].findOne({token: token});
+    let currentVulns = currentTable ? currentTable['vulns'] : [];
+
+    if (action === 'add') {
+        currentVulns = currentVulns.concat(vulns);
+        currentVulns = deleteDuplicate('Title',currentVulns);
+    }
+
+    if (action === 'delete') {
+        let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
+        currentVulns.splice(posOfVuln, 1);
+    }
+    
+    // Decide first time or many times which adding vulns to database
+    if (!currentTable) {
+        await database['vuln'].add({token: token, vulns: currentVulns});
+    } else {
+        let id = currentTable._id;
+        let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
+    }
+
+    await database['report'].updateDocument({token: token}, {vulns: currentVulns})
+}
+
 // Find the most common element in an array
 function fiveMostCommonUrls(arrayOfUrls) {
     // Generate an array of arrays which have this format [ [element, occurences],...]
@@ -422,6 +448,7 @@ module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
 module.exports.deleteDuplicate = deleteDuplicate
+module.exports.processVulnsTable = processVulnsTable
 module.exports.initializeReport = initializeReport
 module.exports.updateReport = updateReport
 module.exports.fiveMostCommonUrls = fiveMostCommonUrls
