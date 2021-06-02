@@ -5,6 +5,7 @@ const fs = require('fs')
 const startWep = require('./cli')
 const express = require('express')
 const bodyParser = require('body-parser')
+const { spawnSync } = require('child_process')
 const databaseHandle = require('./database')
 const addCve = require('./lib')
 const {search,
@@ -641,6 +642,14 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 })
 ///////////////////////////////////////////////////
 
+app.get('/analyze_result/curl', async (req,res)=>{
+    let {url} = req.query
+
+    let curl = spawnSync('curl',[url])
+
+    let result = new TextDecoder().decode(curl.stdout)
+    res.send(result)
+})
 
 ////////////////////////////////////////////////////
 app.get('/history', async (req,res)=>{
