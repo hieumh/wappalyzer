@@ -109,7 +109,7 @@ app.use((req,res,next) =>{
 // Token generator
 app.get("/initialize", async (req, res) => {
 
-    const {url} = req.body;
+    const {url} = req.query;
     let token = uuidv4();
 
     // Check if report with this token exist ?
@@ -746,7 +746,6 @@ app.get('/search_database', async (req, res) => {
 });
 
 app.post('/update_vulns_table', async(req, res) => {
-    
     let {token, action, vulns} = req.body;
     await processVulnsTable(database, token, action, vulns);
     
