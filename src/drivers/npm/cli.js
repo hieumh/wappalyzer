@@ -97,10 +97,13 @@ async function startWep(database, url, token, _options) {
         
         const site = await wappalyzer.open(url)
         const results = await site.analyze()
+
         results.url = url
+
 
         const report = await addCve(results)
         // report.url = report.url.split("//")[1]
+
 
         report['programing_language'] = filterLanguage(report['technologies'])
         report['framework'] = filterFramework(report['technologies'])
