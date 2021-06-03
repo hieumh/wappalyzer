@@ -38,7 +38,9 @@ const {search,
     updateReport,
     intersectionListObject,
     intersectionList,
-    countExist
+    countExist,
+    takeScreenshot,
+    getHostFromUrl
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -642,13 +644,14 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 })
 ///////////////////////////////////////////////////
 
-app.get('/analyze_result/curl', async (req,res)=>{
+app.get('/analyze_result/screenshot', async (req,res)=>{
     let {url} = req.query
+    
+    console.log("call sceenshot")
 
-    let curl = spawnSync('curl',[url])
+    let check = await takeScreenshot(url)
 
-    let result = new TextDecoder().decode(curl.stdout)
-    res.send(result)
+    res.sendFile( __dirname + '/'+ check);
 })
 
 ////////////////////////////////////////////////////

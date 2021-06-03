@@ -1,6 +1,7 @@
 const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
+const puppeteer = require('puppeteer')
 
 let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
@@ -14,6 +15,28 @@ let portServerApi = "5000"
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
 
 let framework = readFile("./alphabet_programing_language/framework.txt").split("\n").map(element=>element.trim().toLowerCase())
+
+function getHostFromUrl(url){
+    if(url.split('//').length == 2){
+        return url.split('//')[1].split('.')[0]
+    }
+    return url.split('.')[0]
+}
+
+async function takeScreenshot(url){
+    const browser = await puppeteer.launch( {args: ['--no-sandbox'], timeout: 10000,})
+    const page = await browser.newPage()
+    const options = {
+        path:'images/'+getHostFromUrl(url)+".png",
+        fullPage:true,
+        omitBackground:true
+    }
+
+    await page.goto(url)
+    await page.screenshot(options)
+    await browser.close()
+    return options.path
+}
 
 async function checkCms(url){
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/cmseek?url=${url}`)
@@ -481,6 +504,8 @@ module.exports.filterFramework =filterFramework
 module.exports.intersectionListObject = intersectionListObject
 module.exports.intersectionList = intersectionList
 module.exports.countExist = countExist
+module.exports.takeScreenshot = takeScreenshot
+module.exports.getHostFromUrl = getHostFromUrl
 
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase
