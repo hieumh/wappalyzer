@@ -741,7 +741,6 @@ class Site {
 
             this.error(error)
         }
-
         const results = {
             urls: this.analyzedUrls,
             technologies: resolve(this.detections).map(
@@ -818,7 +817,6 @@ class Site {
 
     onDetect(detections = []) {
         this.detections = this.detections.concat(detections)
-
         this.detections.filter(
             ({ technology: { name }, pattern: { regex } }, index) =>
             this.detections.findIndex(

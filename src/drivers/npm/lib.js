@@ -2,11 +2,12 @@ const request = require('async-request')
 const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 const puppeteer = require('puppeteer')
+const axios = require('axios');
 
 let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.5"
 let portCveApi = "4000"
 
 let hostServerApi = "172.17.0.5"
@@ -273,7 +274,7 @@ function createTree(arr){
 function deleteDuplicate(fieldForFilter, arrayOfObjects) {
     let arr
     try {
-        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter]).trim(), object] });
+        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter] || '').trim(), object] });
     } catch(error){
         console.error(error)
     }
@@ -466,6 +467,133 @@ function intersectionListObject(key,unionList){
     return result
 }
 
+async function pullTechnologyFile() {
+  try {
+    let results = await axios.get('https://raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
+    let data = results.data;
+    return data;
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function initializeSearch(url, token) {
+  const fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+  let newSearch = fields.reduce((target, field) => {
+      return target[field] = [];
+  }, {});
+  newSearch['url'] = url;
+  newSearch['token'] = token;
+  return newSearch;
+}
+async function filterDataWapp(dataFromTool) {
+  let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+  let techData = dataFromTool['technologies'];
+
+  let search_results = techData
+    .map(techDatumn => ({
+      technology: techDatumn?.version ? techDatumn.slug + '/' + techDatumn.version : techDatumn.slug ,
+      category: techDatumn.categories[0].name.toLowerCase().replace(/\s+/g, '')
+    }))
+    .filter(({category}) => fields.includes(category))
+    .reduce((result, {technology, category}) => ({...result, [category]: [...(result[category] || []), technology]}), {})
+
+  search_results['token'] = dataFromTool['token'];
+  search_results['url'] = dataFromTool['url'];
+  
+  return search_results;
+
+}
+
+// Filter data for search table
+async function filterDataTool(dataFromTool) {
+    let  technologiesFile = await pullTechnologyFile();
+    let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+    let techData = dataFromTool['technologies'];
+
+    let technologies = technologiesFile.technologies;
+    let categories = technologiesFile.categories;
+    const technologyNames = Object.keys(technologies).map(name => name.toLowerCase());
+
+    let search_results = techData
+        .filter(({name}) => technologyNames.includes(name.toLowerCase().trim()))
+        .reduce((result, technology) => {
+        const technologyName = Object.keys(technologies).find(item => technology.name.toLowerCase().trim() === item.toLowerCase());
+        result.push([technologyName, technology?.version ? technology.version : '']);
+        return result;
+        }, [])
+        .map(technology => {
+        const category = technologies[technology[0]].cats[0];
+        return {
+            technology: technology[1] ? technology[0].toLowerCase() + '/' + technology[1] : technology[0].toLowerCase(),
+            category: categories[category].name.toLowerCase().replace(/\s+/, '')
+        }
+        })
+        .filter(({category}) => fields.includes(category))
+        .reduce((result, {technology, category}) => ({
+        ...result, [category]: [...(result[category] || []), technology]
+        }), {})
+
+        if (Object.keys(dataFromTool).includes('hosting history')) {
+            if (dataFromTool['hosting history'].length !== 0) {
+                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'].toLowerCase() || [])];
+                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'].toLowerCase() || [])];
+            }
+        }
+        
+        search_results['token'] = dataFromTool['token'];
+        search_results['url'] = dataFromTool['url'];
+    return search_results;
+}
+
+async function searchInSearchTable(database, pattern) {
+  const  fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+  const regex = new RegExp(pattern, 'gi');
+
+  let results = await Promise.all(fields
+    .filter(field => field !== 'url' && field !== 'token')
+    .map(async (field) => {
+      const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
+      return resultFromSearch;
+    }))
+  results = results.reduce((current, item) => {
+    return current.concat(item);
+  }, [])
+  return results;
+}
+
+async function searchInReportTable(database, pattern) {
+  let fields = ['url', 'domain', 'dic', 'dig', 'fierce', 'gobuster', 'server', 'netcraft', 'largeio', 'wapp', 'whatweb', 'webtech', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'nikto', 'vulns', 'programing_language', 'framework', 'time_create'];
+  const regex = new RegExp(pattern, 'gi');
+
+  // Get all reports from databases
+  const allReportsFromDatabase = await database['report'].getTable({});
+  
+  let results = allReportsFromDatabase
+    .reduce((current, report) => {
+        const finalResult = fields.reduce((current, field) => {
+           const fieldContent = JSON.stringify(!report[field] ? [] : report[field]);
+           return fieldContent.search(regex) < 0 ? current + 0 : current + 1;
+        }, 0);
+        return finalResult > 0 ? current.concat(report) : current.concat([]);
+    }, []);
+  return results;
+}
+
+async function updateSearchTable(database, searchData) {
+    let fields = ['operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+    const targetExist = await database['search'].findOne({token: searchData.token});
+    const finalResult = fields
+        .filter((field) => Object.keys(searchData).includes(field))
+        .reduce((current, field) => {
+            current[field] = [...new Set([...(current[field] || []),...(targetExist[field] || []),...searchData[field]])];
+            return current;
+        }, {});
+
+    await database['search'].updateDocument({token: searchData.token}, finalResult);
+
+}
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
@@ -477,6 +605,13 @@ module.exports.updateReport = updateReport
 module.exports.fiveMostCommonUrls = fiveMostCommonUrls
 module.exports.fiveMostCommonVulns = fiveMostCommonVulns
 module.exports.fiveMostCommonWafs = fiveMostCommonWafs
+module.exports.pullTechnologyFile = pullTechnologyFile
+module.exports.initializeSearch = initializeSearch
+module.exports.updateSearchTable = updateSearchTable
+module.exports.filterDataTool = filterDataTool
+module.exports.filterDataWapp = filterDataWapp
+module.exports.searchInReportTable = searchInReportTable
+module.exports.searchInSearchTable = searchInSearchTable
 
 module.exports.search = search
 module.exports.treeParse = treeParse

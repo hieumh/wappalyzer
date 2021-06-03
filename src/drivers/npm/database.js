@@ -147,6 +147,16 @@ class databaseHandle{
                 framework:Array,
                 time_create:String,
                 token: String
+            },
+            'search' : { 
+                url: String,
+                token: String,
+                operatingsystems: Array,
+                webservers: Array,
+                webframeworks: Array,
+                javascriptframeworks: Array,
+                cms: Array,
+                programminglanguages: Array,
             }
         }
         this.mapSchema = {}
@@ -236,6 +246,10 @@ class databaseHandle{
 
     async updateDocument(condition, fieldForUpdate) {
         await this.modelTable.updateOne(condition, fieldForUpdate);
+    }
+
+    async elementMatch(field, condition) {
+        return await await this.modelTable.find({}).elemMatch(field, condition);
     }
 
     async delete(target){
