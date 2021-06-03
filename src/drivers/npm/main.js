@@ -107,8 +107,27 @@ app.use((req,res,next) =>{
 // })
 
 // Token generator
-app.get("/token/generator", async (req, res) => {
+app.get("/initialize", async (req, res) => {
+
+    const {url} = req.body;
     let token = uuidv4();
+
+    // Check if report with this token exist ?
+    // If no initialize a new report within this token
+    let reportExist = await database['report'].findOne({token: token});
+    if (!reportExist) {
+        let report = initializeReport(url, token);
+        await database['report'].add(report);
+    }
+
+    // Check if have anyone in search table
+    // If no initialize a new one
+    const searchExist = await database['search'].findOne({token: token});
+    if (!searchExist) {
+        const target = initializeSearch(url, token);
+        await database['search'].add(target);
+    }
+
     res.send(token)
 });
 
@@ -142,22 +161,6 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     let {url} = req.body
 
     let token = req.body.token;
-
-    // Check if report with this token exist ?
-    // If no initialize a new report within this token
-    let reportExist = await database['report'].findOne({token: token});
-    if (!reportExist) {
-        let report = initializeReport(url, token);
-        await database['report'].add(report);
-    }
-
-    // Check if have anyone in search table
-    // If no initialize a new one
-    const searchExist = await database['search'].findOne({token: token});
-    if (!searchExist) {
-        const target = initializeSearch(url, token);
-        await database['search'].add(target);
-    }
     
     // wait for analyze successfully    
     let report = await startWep(database,url, token)
