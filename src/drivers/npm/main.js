@@ -683,13 +683,16 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 ///////////////////////////////////////////////////
 
 app.get('/analyze_result/screenshot', async (req,res)=>{
-    let {url} = req.query
+    let {url,pic,token} = req.query
+    if (pic){
+        res.sendFile(__dirname + '/images/' + pic)
+        return
+    }
     
-    console.log("call sceenshot")
-
-    let check = await takeScreenshot(url)
-
-    res.sendFile( __dirname + '/'+ check);
+    console.log("take sceenshot")
+    let picName = await takeScreenshot(url)
+    await database['report'].updateDocument({token: token}, {pic:picName });
+    res.sendFile( __dirname + '/'+ picName);
 })
 
 ////////////////////////////////////////////////////

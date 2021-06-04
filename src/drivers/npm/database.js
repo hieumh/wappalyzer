@@ -146,7 +146,8 @@ class databaseHandle{
                 programing_language:Array,
                 framework:Array,
                 time_create:String,
-                token: String
+                token: String,
+                pic:String
             },
             'search' : { 
                 url: String,
