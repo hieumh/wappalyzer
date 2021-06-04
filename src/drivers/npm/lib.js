@@ -4,13 +4,13 @@ const fs = require('fs')
 const puppeteer = require('puppeteer')
 const axios = require('axios');
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -274,7 +274,7 @@ function createTree(arr){
 function deleteDuplicate(fieldForFilter, arrayOfObjects) {
     let arr
     try {
-        arr = arrayOfObjects.map( (object) => { return [String(object[fieldForFilter] || '').trim(), object] });
+        arr = arrayOfObjects.map( (object) => { return [String(object ? object[fieldForFilter] : '').trim(), object] });
     } catch(error){
         console.error(error)
     }
@@ -548,33 +548,38 @@ async function filterDataTool(dataFromTool) {
 }
 
 async function searchInSearchTable(database, pattern) {
-  const  fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-  const regex = new RegExp(pattern, 'gi');
+    const  fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+    const regex = new RegExp(pattern, 'gi');
+  
+    let results = await Promise.all(fields
+      .filter(field => field !== 'url' && field !== 'token')
+      .map(async (field) => {
+        const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
+        return resultFromSearch;
+      }));
+    
+    results = results.reduce((current, item) => {
+        return current.concat(item);
+    }, []);
 
-  let results = await Promise.all(fields
-    .filter(field => field !== 'url' && field !== 'token')
-    .map(async (field) => {
-      const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
-      return resultFromSearch;
-    }))
-  results = results.reduce((current, item) => {
-    return current.concat(item);
-  }, [])
-  return results;
+    results = await Promise.all(results.map(async (item) => {
+        const reportFromToken = await database['report'].findOne({token: item.token});
+        return reportFromToken;
+    }));
+
+    return results;
 }
 
 async function searchInReportTable(database, pattern) {
   let fields = ['url', 'domain', 'dic', 'dig', 'fierce', 'gobuster', 'server', 'netcraft', 'largeio', 'wapp', 'whatweb', 'webtech', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'nikto', 'vulns', 'programing_language', 'framework', 'time_create'];
   const regex = new RegExp(pattern, 'gi');
-
   // Get all reports from databases
   const allReportsFromDatabase = await database['report'].getTable({});
-  
   let results = allReportsFromDatabase
     .reduce((current, report) => {
         const finalResult = fields.reduce((current, field) => {
            const fieldContent = JSON.stringify(!report[field] ? [] : report[field]);
-           return fieldContent.search(regex) < 0 ? current + 0 : current + 1;
+           return fieldContent.search(regex) < 0 ? current : ++current;
         }, 0);
         return finalResult > 0 ? current.concat(report) : current.concat([]);
     }, []);
