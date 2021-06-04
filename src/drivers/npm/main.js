@@ -566,7 +566,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
 
     let token = req.body.token;
 
-    let detectWaf = await getDWab(url)
+    let detectWaf = await getDWab(url,token)
     try {
         detectWaf = JSON.parse(detectWaf)
     } catch(err){
@@ -691,7 +691,7 @@ app.get('/analyze_result/screenshot', async (req,res)=>{
     
     console.log("take sceenshot")
     let picName = await takeScreenshot(url)
-    await database['report'].updateDocument({token: token}, {pic:picName });
+    await database['report'].updateDocument({token: token}, {pic:picName.split('/').pop() });
     res.sendFile( __dirname + '/'+ picName);
 })
 
