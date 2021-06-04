@@ -691,6 +691,7 @@ app.get('/analyze_result/screenshot', async (req,res)=>{
     
     console.log("take sceenshot")
     let picName = await takeScreenshot(url)
+    console.log('add to database', {pic:picName.split('/').pop()})
     await database['report'].updateDocument({token: token}, {pic:picName.split('/').pop() });
     res.sendFile( __dirname + '/'+ picName);
 })
