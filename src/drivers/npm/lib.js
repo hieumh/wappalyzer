@@ -548,21 +548,27 @@ async function filterDataTool(dataFromTool) {
 }
 
 async function searchInSearchTable(database, pattern) {
-  const  fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-  const regex = new RegExp(pattern, 'gi');
+    const  fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
+    const regex = new RegExp(pattern, 'gi');
+  
+    let results = await Promise.all(fields
+      .filter(field => field !== 'url' && field !== 'token')
+      .map(async (field) => {
+        const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
+        return resultFromSearch;
+      }));
+    
+    results = results.reduce((current, item) => {
+        return current.concat(item);
+    }, []);
 
-  let results = await Promise.all(fields
-    .filter(field => field !== 'url' && field !== 'token')
-    .map(async (field) => {
-      const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
-      return resultFromSearch;
-    }))
-  results = results.reduce((current, item) => {
-    return current.concat(item);
-  }, [])
-  return results;
+    results = await Promise.all(results.map(async (item) => {
+        const reportFromToken = await database['report'].findOne({token: item.token});
+        return reportFromToken;
+    }));
+
+    return results;
 }
-
 async function searchInReportTable(database, pattern) {
   let fields = ['url', 'domain', 'dic', 'dig', 'fierce', 'gobuster', 'server', 'netcraft', 'largeio', 'wapp', 'whatweb', 'webtech', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'nikto', 'vulns', 'programing_language', 'framework', 'time_create'];
   const regex = new RegExp(pattern, 'gi');
