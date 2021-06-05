@@ -678,7 +678,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 
     await database['report'].updateDocument({token: token}, {nikto: dataSend});
     
-    res.send(nikto)
+    res.send(dataSend)
 })
 ///////////////////////////////////////////////////
 
