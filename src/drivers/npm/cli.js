@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const Wappalyzer = require('./driver')
-const addCve = require('./lib')
 const { getVulnsFromExploitDB, updateReport, filterLanguage,filterFramework, intersectionListObject } = require('./lib')
 const { technologies } = require('./wappalyzer')
 let arg
@@ -100,8 +99,7 @@ async function startWep(database, url, token, _options) {
 
         results.url = url
 
-
-        const report = await addCve(results)
+        const report = results
         // report.url = report.url.split("//")[1]
 
 
