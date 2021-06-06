@@ -1,14 +1,11 @@
 // chịu trách nhiệm phân tích tất cả các route trên
 'use strict'
 //const cli = require('./cli')
-const fs = require('fs')
 const startWep = require('./cli')
 const express = require('express')
 const bodyParser = require('body-parser')
-const { spawnSync } = require('child_process')
 const databaseHandle = require('./database')
-const addCve = require('./lib')
-const {search,
+const {
     getVulnsForNetcraft,
     getVulnsFromExploitDB,
     createTree,
@@ -26,7 +23,6 @@ const {search,
     joomScan,
     niktoScan,
     checkCms,
-    searchSploit,
     deleteDuplicate,
     processVulnsTable,
     fiveMostCommonUrls,
@@ -42,19 +38,15 @@ const {search,
     filterLanguage,
     initializeReport,
     updateReport,
-    intersectionListObject,
     intersectionList,
     countExist,
     takeScreenshot,
-    getHostFromUrl
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
 
 // Add uuidv
 const uuidv4 = require('uuid')
-const { ServerResponse } = require('http')
-const { technologies } = require('./wappalyzer')
 
 const database = {'wapp':null,'link':null}
 database['wapp'] = new databaseHandle('wapp')
@@ -194,10 +186,10 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
         console.error(err)
     }
 
-    let dataSend = await addCve({
+    let dataSend = {
         url:url,
         technologies:dataRecv.technologies
-    })
+    }
 
     dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
     dataSend['framework'] = filterFramework(dataSend['technologies'])
@@ -238,10 +230,10 @@ app.post('/url_analyze/largeio', async (req,res)=>{
         tech = dataRecv.technologies
     }
 
-    let dataSend = await addCve({
+    let dataSend = {
         url:url,
         technologies:tech
-    })
+    }
 
     dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
     dataSend['framework'] = filterFramework(dataSend['technologies'])
@@ -281,10 +273,10 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
         tech = dataRecv.technologies
     }
 
-    let dataSend = await addCve({
+    let dataSend = {
         url:url,
         technologies:tech
-    })
+    }
     
     dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
     dataSend['framework'] = filterFramework(dataSend['technologies'])
@@ -324,10 +316,10 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         tech = dataRecv.technologies
     }
 
-    let dataSend = await addCve({
+    let dataSend = {
         url:url,
         technologies:tech
-    })
+    }
     
     dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
     dataSend['framework'] = filterFramework(dataSend['technologies'])
