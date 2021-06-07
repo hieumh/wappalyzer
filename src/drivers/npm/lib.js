@@ -4,13 +4,13 @@ const fs = require('fs')
 const puppeteer = require('puppeteer')
 const axios = require('axios');
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
+let hostCveApi = "172.17.0.3"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.5"
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -285,11 +285,15 @@ function deleteDuplicate(fieldForFilter, arrayOfObjects) {
 
 async function processVulnsTable(database, token, action, vulns) {
 
-    let currentTable = await database['vuln'].findOne({token: token});
-    let currentVulns = currentTable ? currentTable['vulns'] : [];
+    let currentReport = await database['report'].findOne({token: token});
+    let currentVulns = currentReport?.vulns || [];
 
-    if (action === 'add') {
-        currentVulns = currentVulns.concat(vulns);
+    if (action === 'add' && vulns) {
+        try {
+            currentVulns = [...currentVulns, ...vulns];
+        } catch {
+            currentVulns = vulns.Title !== '' ? currentVulns.concat(vulns) : currentVulns;
+        }
         currentVulns = deleteDuplicate('Title',currentVulns);
     }
 
@@ -297,16 +301,8 @@ async function processVulnsTable(database, token, action, vulns) {
         let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
         currentVulns.splice(posOfVuln, 1);
     }
-    
-    // Decide first time or many times which adding vulns to database
-    if (!currentTable) {
-        await database['vuln'].add({token: token, vulns: currentVulns});
-    } else {
-        let id = currentTable._id;
-        let check = await database['vuln'].replaceDocument({_id: id}, {token: token, vulns: currentVulns});
-    }
 
-    await database['report'].updateDocument({token: token}, {vulns: currentVulns})
+    await database['report'].updateDocument({token: token}, {vulns: currentVulns});
 }
 
 // Find the most common element in an array
@@ -361,16 +357,19 @@ function initializeReport(url, token) {
     let fields = ['url','domain', 'dic', 'dig', 'fierce', 'gobuster', 'server','netcraft','largeio', 'wapp', 'whatweb', 'webtech', 'sublist3r', 'wafw00f', 'droopescan', 'joomscan', 'nikto', 'vulns', 'programing_language','framework','time_create','token'];
     let newReport = {};
     for (let i = 0; i < fields.length; i++) {
-        newReport[fields[i]] = [];
+        newReport[fields[i]] = {};
     }
+
     let time = new Date()
     newReport['time_create'] = time
 
     newReport['url'] = url;
     newReport['token'] = token;
 
-    newReport['programing_language'] = [];
+    // Some data need to be an array when initializing
+    newReport['vulns'] = [];
     newReport['framework'] = [];
+    newReport['programing_language'] = [];
 
     return newReport;
 }
@@ -380,12 +379,11 @@ async function updateReport(database, token, tool, data) {
     let existReport = await database['report'].findOne({token: token});
 
     await database['report'].updateDocument({token: token}, {
-        [tool]: data, 
+        [tool]: data,
         programing_language: intersectionList([...existReport['programing_language'],...data['programing_language']]), 
         framework: intersectionList([...existReport['framework'],...data['framework']])
     });
 }
-
 
 function filterLanguage(techsInDatabase){
     return techsInDatabase.filter(tech=>{
@@ -489,7 +487,7 @@ function initializeSearch(url, token) {
 }
 async function filterDataWapp(dataFromTool) {
   let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-  let techData = dataFromTool['technologies'];
+  let techData = dataFromTool?.technologies || [];
 
   let search_results = techData
     .map(techDatumn => ({
@@ -508,12 +506,13 @@ async function filterDataWapp(dataFromTool) {
 
 // Filter data for search table
 async function filterDataTool(dataFromTool) {
-    let  technologiesFile = await pullTechnologyFile();
     let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-    let techData = dataFromTool['technologies'];
+    let techData = dataFromTool?.technologies || [];
 
+    let technologiesFile = await pullTechnologyFile();
     let technologies = technologiesFile.technologies;
     let categories = technologiesFile.categories;
+
     const technologyNames = Object.keys(technologies).map(name => name.toLowerCase());
 
     let search_results = techData

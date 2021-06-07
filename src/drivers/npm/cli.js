@@ -111,9 +111,7 @@ async function startWep(database, url, token, _options) {
       
         await wappalyzer.destroy()
 
-        let check = await database['wapp'].add(report)
-
-        return check
+        return report;
         // process.stdout.write(
         //     `${JSON.stringify(results, null, options.pretty ? 2 : null)}\n`
         // )
