@@ -374,9 +374,7 @@ async function updateReport(database, token, tool, data) {
     let existReport = await database['report'].findOne({token: token});
 
     await database['report'].updateDocument({token: token}, {
-        [tool]: data,
-        programing_language: intersectionList([...existReport['programing_language'],...data['programing_language']]), 
-        framework: intersectionList([...existReport['framework'],...data['framework']])
+        [tool]: data
     });
 }
 
@@ -516,6 +514,15 @@ async function updateSearchTable(database, searchData) {
 
 }
 
+function calRunTime(end, begin) {
+    diffTime = new Date(end - begin);
+    const hour = diffTime.getHours();
+    const minute = diffTime.getMinutes();
+    const second = diffTime.getSeconds();
+
+    return String(hour) + 'h' + String(minute) + 'p' + String(second) + 's';
+}
+
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
@@ -532,6 +539,7 @@ module.exports.filterDataTool = filterDataTool
 module.exports.filterDataWapp = filterDataWapp
 module.exports.searchInReportTable = searchInReportTable
 module.exports.searchInSearchTable = searchInSearchTable
+module.exports.calRunTime = calRunTime
 
 module.exports.search = search
 module.exports.treeParse = treeParse
