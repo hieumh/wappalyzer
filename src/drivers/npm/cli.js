@@ -100,11 +100,7 @@ async function startWep(database, url, token, _options) {
         results.url = url
 
         const report = results
-        // report.url = report.url.split("//")[1]
 
-
-        report['programing_language'] = filterLanguage(report['technologies'])
-        report['framework'] = filterFramework(report['technologies'])
         // Find vulns by searchsploit api
         report['vulns'] = await getVulnsFromExploitDB(report)
         report['token'] = token;

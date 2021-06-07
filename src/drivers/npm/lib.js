@@ -7,10 +7,10 @@ const axios = require('axios');
 let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.3"
+let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
@@ -292,12 +292,12 @@ async function processVulnsTable(database, token, action, vulns) {
         try {
             currentVulns = [...currentVulns, ...vulns];
         } catch {
-            currentVulns = vulns.Title !== '' ? currentVulns.concat(vulns) : currentVulns;
+            currentVulns = vulns?.Title && vulns.Title !== '' ? currentVulns.concat(vulns) : currentVulns;
         }
         currentVulns = deleteDuplicate('Title',currentVulns);
     }
 
-    if (action === 'delete') {
+    if (action === 'delete' && vulns && vulns?.Title) {
         let posOfVuln = currentVulns.map((vuln) => { return vuln['Title'] }).indexOf(vulns.Title);
         currentVulns.splice(posOfVuln, 1);
     }
@@ -306,51 +306,46 @@ async function processVulnsTable(database, token, action, vulns) {
 }
 
 // Find the most common element in an array
-function fiveMostCommonUrls(arrayOfUrls) {
-    // Generate an array of arrays which have this format [ [element, occurences],...]
-    return Object.entries(arrayOfUrls.reduce((a, v) => {
-            a[v] = a[v] ? a[v] + 1 : 1;
-            return a;
-        }, {})).sort((a, b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
+function fiveMostCommonElements(arrayOfUrls, keyInResult) {
+    return Object
+        .entries(arrayOfUrls
+            .reduce((a, v) => {
+                a[v] = a[v] ? a[v] + 1 : 1;
+                return a;
+            }, {})
+        )
+        .sort((a, b) => { return b[1] - a[1]; })
+        .slice(0, 5)
+        .reduce((a, v) => {
             let obj = {};
-            obj['url'] = v[0];
+            obj[keyInResult] = v[0];
             obj['count'] = v[1];
             a.push(obj);
             return a;
-        }, [])
+        }, []);
 }
 
-function fiveMostCommonVulns(arrayOfVulns) {
-    let arr = arrayOfVulns.map((vuln) => { return [vuln.Title, vuln]; });
+// Find most common elements in array of objects
+function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult) {
+    let arr = arrayOfElements.map((element) => { return [element[fieldFilter], element]; });
     let mapArr = new Map(arr);
 
-    return  Object.entries(arrayOfVulns.reduce((a, v) => {
-        a[v.Title] = a[v.Title] ? a[v.Title] + 1 : 1;
-        return a;
-    }, {})).sort((a,b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
-        let obj = {};
-        obj['vuln'] = mapArr.get(v[0]);
-        obj['count'] = v[1];
-        a.push(obj);
-        return a;
-    }, []);
-
-}
-
-function fiveMostCommonWafs(arrayOfWafs) {
-    let arr = arrayOfWafs.map((waf) => { return [waf.firewall, waf]; });
-    let mapArr = new Map(arr);
-
-    return Object.entries(arrayOfWafs.reduce((a, v) => {
-        a[v.firewall] = a[v.firewall] ? a[v.firewall] + 1 : 1;
-        return a;
-    }, {})).sort((a, b) => { return b[1] - a[1]; }).slice(0, 5).reduce((a, v) => {
-        let obj = {};
-        obj['waf'] = mapArr.get(v[0]);
-        obj['count'] = v[1];
-        a.push(obj);
-        return a;
-    }, []);
+    return Object
+        .entries(arrayOfElements
+            .reduce((a, v) => {
+                a[v[fieldFilter]] = a[v[fieldFilter]] ? a[v[fieldFilter]] + 1 : 1;
+                return a;
+            }, {})
+        )
+        .sort((a, b) => { return b[1] - a[1]; })
+        .slice(0, 5)
+        .reduce((a, v) => {
+            let obj = {};
+            obj[keyInResult] = mapArr.get(v[0]);
+            obj['count'] = v[1];
+            a.push(obj);
+            return a;
+        }, []);
 }
 
 function initializeReport(url, token) {
@@ -385,86 +380,6 @@ async function updateReport(database, token, tool, data) {
     });
 }
 
-function filterLanguage(techsInDatabase){
-    return techsInDatabase.filter(tech=>{
-        return programingLanguage.includes(tech.name.toLowerCase())
-    }).map(element => element.name)
-}
-
-function filterFramework(techsInDatabase){
-    return techsInDatabase.filter(tech=>{
-        return framework.includes(tech.name.toLowerCase())
-    }).map(element => element.name)
-}
-
-function intersectionList(listA, listB){
-    let tempA = listA ? listA : []
-    let tempB = listB ? listB : []
-
-    if(!(tempA.length + tempB.length)){
-        return []
-    }
-
-    let unionList = [...tempA,...tempB]
-    let intersecListKeys = {}
-    let result = []
-
-    for (let element of unionList){
-        intersecListKeys[element] = true
-    }
-
-    for (let name in intersecListKeys){
-        result.push(name)
-    }
-    return result
-}
-
-function countExist(unionList,field){
-    if(!unionList.length){
-        return []
-    }
-
-    let objCount = {}
-    let result = []
-
-    for (let element of unionList){
-        objCount[element]= objCount[element] ?  objCount[element] : {}
-        objCount[element]['count'] = objCount[element]['count'] === undefined ? 1 : objCount[element]['count']+1
-    }
-
-    for (let key in objCount){
-        let temp = {}
-        temp[field] = key
-        temp['count'] = objCount[key]['count']
-
-        result.push(temp)
-    }
-    return result
-}
-
-function intersectionListObject(key,unionList){
-    if(!key){
-        return []
-    }
-
-    if(!unionList.length)
-    {
-        return []
-    }
-
-    let intersecListKeys = {}
-    let result = []
-
-    for (let obj of unionList){
-        intersecListKeys[obj[key]] = true
-    }
-
-    for (let name in intersecListKeys){
-        result.push(name)
-    }
-    return result
-}
-
 async function pullTechnologyFile() {
   try {
     let results = await axios.get('https://raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
@@ -491,11 +406,13 @@ async function filterDataWapp(dataFromTool) {
 
   let search_results = techData
     .map(techDatumn => ({
-      technology: techDatumn?.version ? techDatumn.slug + '/' + techDatumn.version : techDatumn.slug ,
+      technology: techDatumn?.version ? techDatumn.name + '/' + techDatumn.version : techDatumn.name,
       category: techDatumn.categories[0].name.toLowerCase().replace(/\s+/g, '')
     }))
     .filter(({category}) => fields.includes(category))
-    .reduce((result, {technology, category}) => ({...result, [category]: [...(result[category] || []), technology]}), {})
+    .reduce((result, {technology, category}) => ({
+        ...result, [category]: [...(result[category] || []), technology]
+    }), {});
 
   search_results['token'] = dataFromTool['token'];
   search_results['url'] = dataFromTool['url'];
@@ -518,17 +435,16 @@ async function filterDataTool(dataFromTool) {
     let search_results = techData
         .filter(({name}) => technologyNames.includes(name.toLowerCase().trim()))
         .reduce((result, technology) => {
-        const technologyName = Object.keys(technologies).find(item => technology.name.toLowerCase().trim() === item.toLowerCase());
-        result.push([technologyName, technology?.version ? technology.version : '']);
-        return result;
+            const technologyName = Object.keys(technologies).find(item => technology.name.toLowerCase().trim() === item.toLowerCase());
+            result.push([technologyName, technology?.version ? technology.version : '']);
+            return result;
         }, [])
         .map(technology => {
         const category = technologies[technology[0]].cats[0];
         return {
-            technology: technology[1] ? technology[0].toLowerCase() + '/' + technology[1] : technology[0].toLowerCase(),
+            technology: technology[1] ? technology[0] + '/' + technology[1] : technology[0],
             category: categories[category].name.toLowerCase().replace(/\s+/, '')
-        }
-        })
+        }})
         .filter(({category}) => fields.includes(category))
         .reduce((result, {technology, category}) => ({
         ...result, [category]: [...(result[category] || []), technology]
@@ -536,11 +452,11 @@ async function filterDataTool(dataFromTool) {
 
         if (Object.keys(dataFromTool).includes('hosting history')) {
             if (dataFromTool['hosting history'].length !== 0) {
-                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'].toLowerCase() || [])];
-                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'].toLowerCase() || [])];
+                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'] || [])];
+                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'] || [])];
             }
         }
-        
+
         search_results['token'] = dataFromTool['token'];
         search_results['url'] = dataFromTool['url'];
     return search_results;
@@ -607,9 +523,8 @@ module.exports.deleteDuplicate = deleteDuplicate
 module.exports.processVulnsTable = processVulnsTable
 module.exports.initializeReport = initializeReport
 module.exports.updateReport = updateReport
-module.exports.fiveMostCommonUrls = fiveMostCommonUrls
-module.exports.fiveMostCommonVulns = fiveMostCommonVulns
-module.exports.fiveMostCommonWafs = fiveMostCommonWafs
+module.exports.fiveMostCommonElements = fiveMostCommonElements
+module.exports.fiveMostCommonObjects = fiveMostCommonObjects
 module.exports.pullTechnologyFile = pullTechnologyFile
 module.exports.initializeSearch = initializeSearch
 module.exports.updateSearchTable = updateSearchTable
@@ -639,11 +554,6 @@ module.exports.searchsploit = searchsploit
 module.exports.createTree = createTree
 module.exports.checkCms = checkCms
 module.exports.readFile = readFile
-module.exports.filterLanguage = filterLanguage
-module.exports.filterFramework =filterFramework
-module.exports.intersectionListObject = intersectionListObject
-module.exports.intersectionList = intersectionList
-module.exports.countExist = countExist
 module.exports.takeScreenshot = takeScreenshot
 module.exports.getHostFromUrl = getHostFromUrl
 

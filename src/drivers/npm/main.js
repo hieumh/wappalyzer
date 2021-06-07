@@ -25,21 +25,16 @@ const {
     checkCms,
     deleteDuplicate,
     processVulnsTable,
-    fiveMostCommonUrls,
-    fiveMostCommonVulns,
-    fiveMostCommonWafs,
+    fiveMostCommonElements,
+    fiveMostCommonObjects,
     initializeSearch,
     updateSearchTable,
     filterDataTool,
     filterDataWapp,
     searchInReportTable,
     searchInSearchTable,
-    filterFramework,
-    filterLanguage,
     initializeReport,
     updateReport,
-    intersectionList,
-    countExist,
     takeScreenshot,
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
@@ -67,10 +62,6 @@ app.use((req,res,next) =>{
     res.append('Access-Control-Allow-Headers', 'Origin,Content-Type,Cache-Control,Authorization');
     next();
 })
-
-// app.get('/*', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'build', 'index.html'))
-// })
 
 // Token generator
 app.get("/initialize", async (req, res) => {
@@ -163,8 +154,6 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
         technologies:dataRecv.technologies
     }
 
-    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
-    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token;
     dataSend['vulns'] = await getVulnsForNetcraft(dataRecv);
 
@@ -206,8 +195,6 @@ app.post('/url_analyze/largeio', async (req,res)=>{
         technologies:tech
     }
 
-    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
-    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token
     dataSend['vulns'] = await getVulnsFromExploitDB(dataRecv);
 
@@ -247,9 +234,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
         url:url,
         technologies:tech
     }
-    
-    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
-    dataSend['framework'] = filterFramework(dataSend['technologies'])
+
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
@@ -290,8 +275,6 @@ app.post('/url_analyze/webtech', async (req,res)=>{
         technologies:tech
     }
     
-    dataSend['programing_language'] = filterLanguage(dataSend['technologies'])
-    dataSend['framework'] = filterFramework(dataSend['technologies'])
     dataSend['token'] = token
     dataSend['vulns'] = dataRecv['vulns'];
 
@@ -720,25 +703,27 @@ app.get('/dashboard/num_report', async (req,res)=>{
     res.send(listReport.length.toString())
 })
 
-app.get('/dashboard/num_tech', async (req,res)=>{
-    let listReport = await database['report'].getTable({})
+app.get('/dashboard/element', async (req, res) => {
+    const {type, option} = req.query;
+    const fieldFilter = type === 'language' ? 'programminglanguages' : 'webframeworks';
+    const keyInResult = type === 'language' ? 'programing_language' : 'framework';
 
-    let intersecList = []
-    for (let report of listReport){
-        intersecList = intersectionList(intersecList, report['programing_language'])
-    }
+    const searchData = await database['search'].getTable({});
+
+    let elementsList = searchData
+        .map((item) => {
+            let elements = item[fieldFilter].map((language) => language.split('/')[0]);
+            return [...new Set(elements)]
+        })
+        .reduce((result, searchRecord) => ([
+            ...result, ...searchRecord
+        ]), [])
     
-    res.send(intersecList.length.toString())
-})
-
-app.get('/dashboard/num_framework', async (req,res)=>{
-    let listReport = await database['report'].getTable({})
-
-    let intersecList = []
-    for (let report of listReport){
-        intersecList = intersectionList(intersecList, report['framework'])
+    if (option === 'number') {
+        res.send([...new Set(elementsList)].length.toString());
+    } else {
+        res.send(fiveMostCommonElements(elementsList, keyInResult));
     }
-    res.send(intersecList.length.toString())
 })
 
 app.get('/dashboard/num_vuln', async (req, res) => {
@@ -752,29 +737,6 @@ app.get('/dashboard/num_vuln', async (req, res) => {
     
     res.send(arrayOfVulns.length.toString());
 });
-
-app.get("/dashboard/language_ratio",async (req,res)=>{
-    let listReport = await database['report'].getTable({})
-
-    let unionList = []
-    for (let report of listReport){
-        unionList.push(...report["programing_language"])
-    }
-    let dataSend = countExist(unionList,"programing_language")
-    res.send(dataSend)
-})
-
-app.get('/dashboard/framework_ratio',async (req,res)=>{
-    let listReport = await database['report'].getTable({})
-
-    let unionList = []
-    for (let report of listReport){
-        unionList.push(...report["framework"])
-    }
-
-    let dataSend = countExist(unionList,'framework')
-    res.send(dataSend)
-})
 
 app.get('/dashboard/get_five_most_common', async (req, res) => {
     // Get the most common of url or vuln ?
@@ -792,7 +754,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return result;
             }, []);
 
-            res.send(fiveMostCommonUrls(arrayOfUrls));
+            res.send(fiveMostCommonElements(arrayOfUrls, 'url'));
         }
         // If type is vuln
         if (type === 'vuln') {
@@ -800,7 +762,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return resultAllReports.concat(report.vulns);
             }, []);
 
-            res.send(fiveMostCommonVulns(arrayOfVulns));
+            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln'));
         }
         // If type is waf
         if (type === 'waf') {
@@ -817,16 +779,12 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
 
             }, []);
 
-            res.send(fiveMostCommonWafs(arrayOfWafs));
+            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf'));
         }
     }
 });
 
-function updateTechnologiesFile() {
-    
-}
 app.listen(3000, () => {
-    updateTechnologiesFile();
     console.log("Server is running on port 3000")
 })
 
