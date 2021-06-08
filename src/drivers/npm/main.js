@@ -36,6 +36,7 @@ const {
     initializeReport,
     updateReport,
     takeScreenshot,
+    calRunTime
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -119,8 +120,11 @@ app.post('/url_analyze/wapp',async (req,res)=>{
 
     let token = req.body.token;
     
+    const time_begin = new Date();
     // Wait for analyze successfully    
     let report = await startWep(database,url, token)
+    const time_end = new Date();
+    report['runtime'] = calRunTime(time_end, time_begin);
 
     // Update search table
     const searchResult = await filterDataWapp(report);
@@ -141,7 +145,10 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     // Get token from request
     let token = req.body.token;
 
+    const time_begin = new Date();
     let dataRecv = await netcraft.netcraft(url)
+    const time_end = new Date();
+
     try {
         dataRecv = JSON.parse(dataRecv)
         dataRecv['token'] = token;
@@ -151,7 +158,8 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
 
     let dataSend = {
         url:url,
-        technologies:dataRecv.technologies
+        technologies:dataRecv.technologies,
+        runtime: calRunTime(time_end, time_begin)
     }
 
     dataSend['token'] = token;
@@ -175,8 +183,10 @@ app.post('/url_analyze/largeio', async (req,res)=>{
 
     // Get token from request
     let token = req.body.token;
-
+    const time_begin = new Date();
     let dataRecv = await largeio.largeio(url)
+    const time_end = new Date();
+
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
@@ -192,7 +202,8 @@ app.post('/url_analyze/largeio', async (req,res)=>{
 
     let dataSend = {
         url:url,
-        technologies:tech
+        technologies:tech,
+        runtime: calRunTime(time_end, time_begin)
     }
 
     dataSend['token'] = token
@@ -216,7 +227,10 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let dataRecv = await getTechWhatWeb(url,token)
+    const time_end = new Date();
+
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
@@ -232,7 +246,8 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
 
     let dataSend = {
         url:url,
-        technologies:tech
+        technologies:tech,
+        runtime: calRunTime(time_end, time_begin)
     }
 
     dataSend['token'] = token
@@ -256,7 +271,10 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let dataRecv = await getTechWebTech(url)
+    const time_end = new Date();
+
     try {
         dataRecv = JSON.parse(dataRecv)
     } catch (err){
@@ -272,7 +290,8 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 
     let dataSend = {
         url:url,
-        technologies:tech
+        technologies:tech,
+        runtime: calRunTime(time_end, time_begin)
     }
     
     dataSend['token'] = token
@@ -337,7 +356,10 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let dataRecv = await getDicGobuster(url)
+    const time_end = new Date();
+
     if (dataRecv == "Wrong URL"){
         dataRecv = {}
     }
@@ -350,6 +372,7 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     let dataSend = {
         url:url,
         gobuster:dataRecv,
+        runtime: calRunTime(time_begin, time_end),
         token: token
     }
     // Update gobuster to report table
@@ -367,13 +390,16 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 app.post('/url_analyze/dig',async (req,res)=>{
     let {url,token} = req.body
 
+    const time_begin = new Date();
     let dnsInfor = await getDnsDig(url)
+    const time_end = new Date();
 
     let dataSend 
     try {
         dataSend = {
             url:url,
             dns:dnsInfor,
+            runtime: calRunTime(time_end, time_begin),
             token: token
         }
         // Update dig to report table
@@ -389,11 +415,14 @@ app.post('/url_analyze/dig',async (req,res)=>{
 app.post('/url_analyze/fierce', async (req,res)=>{
     let {url,token} = req.body
 
+    const time_begin = new Date();
     let dnsInfor = await getDnsFierce(url, token)
+    const time_end = new Date();
 
     let dataSend = {
         url:url,
         dns:dnsInfor,
+        runtime: calRunTime(time_end, time_begin),
         token: token
     }
     // Update fierce to report table
@@ -413,7 +442,10 @@ app.post('/url_analyze/whois', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let domainInfor = await getDomainWhoIs(url)
+    const time_end = new Date();
+
     try {
         domainInfor = JSON.parse(domainInfor)
     } catch (err){
@@ -430,6 +462,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
     let dataSend ={
         url:url,
         domains:domainInfor,
+        runtime: calRunTime(time_end, time_begin),
         token: token
     }
     // Update whois to report table
@@ -443,7 +476,10 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let domainInfor = await getDomainSub(url)
+    const time_end = new Date();
+
     try {
         domainInfor = JSON.parse(domainInfor)
     } catch (err){
@@ -453,6 +489,7 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
     let dataSend = {
         url:url,
         domains:domainInfor.subdomains,
+        runtime: calRunTime(time_end, time_begin),
         token: token
     }
     // Update sublist3r to report table
@@ -472,7 +509,10 @@ app.post('/url_analyze/server', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let serverInfor = await getServerInfor(url, token)
+    const time_end = new Date();
+
     try{
         serverInfor = JSON.parse(serverInfor);
     } catch(error) {
@@ -482,6 +522,7 @@ app.post('/url_analyze/server', async (req,res)=>{
     let dataSend = {
         url:url,
         server:serverInfor['nmap'],
+        runtime: calRunTime(time_end, time_begin),
         token: token,
         vulns: serverInfor['vulns']
     }
@@ -506,7 +547,10 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let detectWaf = await getDWab(url,token)
+    const time_end = new Date();
+
     try {
         detectWaf = JSON.parse(detectWaf)
     } catch(err){
@@ -516,6 +560,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     let dataSend = {
         url:url,
         waf:detectWaf.wafs,
+        runtime: calRunTime(time_end, time_begin),
         token: token
     };
     // Update wafw00f to report table
@@ -536,11 +581,14 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let wp = await wpScan(url, token)
+    const time_end = new Date();
 
     let dataSend = {
         url:url,
         wp:wp,
+        runtime: calRunTime(time_end, time_begin),
         token: token,
         vulns: wp['vulns']
     }
@@ -559,11 +607,14 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let droope = await droopScan(url)
+    const time_end = new Date();
 
     let dataSend = {
         url:url,
         droope:droope,
+        runtime: calRunTime(time_end, time_begin),
         token: token,
         vulns: droope['vulns']
     };
@@ -585,11 +636,14 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
 
     let token = req.body.token;
 
+    const time_begin = new Date();
     let joomscan = await joomScan(url)
+    const time_end = new Date();
 
     let dataSend = {
         url:url,
         joomscan:joomscan,
+        runtime: calRunTime(time_begin, time_end),
         token: token,
         vulns: joomscan['vulns']
     }
@@ -607,11 +661,14 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     let {url} =  req.body
     let token = req.body.token;
 
+    const time_begin = new Date();
     let nikto = await niktoScan(url, token)
+    const time_end = new Date();
 
     let dataSend = {
         url:url,
         nikto:nikto,
+        runtime: calRunTime(time_end, time_begin),
         token: token,
         vulns: nikto['vulnerabilities']
     }
