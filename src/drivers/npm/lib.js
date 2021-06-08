@@ -4,13 +4,14 @@ const fs = require('fs')
 const puppeteer = require('puppeteer')
 const axios = require('axios');
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "172.17.0.3"
 let portDatabase ="27017"
 
 let hostCveApi = "172.17.0.4"
 let portCveApi = "4000"
 
-let hostServerApi = "172.17.0.3"
+
+let hostServerApi = "172.17.0.4"
 let portServerApi = "5000"
 
 let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())

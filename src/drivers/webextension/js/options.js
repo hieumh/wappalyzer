@@ -2,26 +2,22 @@
 /* eslint-env browser */
 /* globals Utils, chrome */
 
-const { i18n, getOption, setOption } = Utils
+const { agent, i18n, getOption, setOption } = Utils
 
 const Options = {
   /**
    * Initialise options
    */
   async init() {
-    // Theme mode
-    const themeMode = await getOption('themeMode', false)
-
-    if (themeMode) {
-      document.querySelector('body').classList.add('theme-mode')
-    }
+    const termsAccepted =
+      agent === 'chrome' || (await getOption('termsAccepted', false))
 
     ;[
       ['upgradeMessage', true],
       ['dynamicIcon', false],
       ['badge', true],
       ['tracking', true],
-      ['themeMode', false],
+      ['showCached', true],
     ].map(async ([option, defaultValue]) => {
       const el = document
         .querySelector(
@@ -31,7 +27,9 @@ const Options = {
         )
         .parentNode.querySelector('input')
 
-      el.checked = !!(await getOption(option, defaultValue))
+      el.checked =
+        !!(await getOption(option, defaultValue)) &&
+        (option !== 'tracking' || termsAccepted)
 
       el.addEventListener('click', async () => {
         await setOption(option, !!el.checked)
