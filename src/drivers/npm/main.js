@@ -321,10 +321,8 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     let token = req.body.token;
 
-    const time_begin = new Date();
     // get link from database
     let result = await database['link'].findOne({url:url})
-    const time_end = new Date();
 
     let arr = []
     let hostname = url.split("//")[1]
@@ -343,8 +341,7 @@ app.post('/url_analyze/dic',async (req,res)=>{
     let dataSave = {
         url:url,
         token: token,
-        trees:JSON.stringify(tree),
-        runtime: calRunTime(time_end, time_begin)
+        trees:JSON.stringify(tree)
     }
 
     // Update dic to report table
