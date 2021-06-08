@@ -4,19 +4,11 @@ const fs = require('fs')
 const puppeteer = require('puppeteer')
 const axios = require('axios');
 
-let hostDatabase = "172.17.0.3"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
-let portCveApi = "4000"
-
-
-let hostServerApi = "172.17.0.4"
+let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
-
-let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
-
-let framework = readFile("./alphabet_programing_language/framework.txt").split("\n").map(element=>element.trim().toLowerCase())
 
 function getHostFromUrl(url){
     if(url.split('//').length == 2){
@@ -423,7 +415,9 @@ async function filterDataWapp(dataFromTool) {
 // Filter data for search table
 async function filterDataTool(dataFromTool) {
     let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-    let techData = dataFromTool?.technologies || [];
+    let techData = dataFromTool && 
+        dataFromTool.technologies && 
+        dataFromTool.technologies !== 'a' ? dataFromTool.technologies : [];
 
     let technologiesFile = await pullTechnologyFile();
     let technologies = technologiesFile.technologies;
@@ -450,12 +444,11 @@ async function filterDataTool(dataFromTool) {
         }), {})
 
         if (Object.keys(dataFromTool).includes('hosting history')) {
-            if (dataFromTool['hosting history'].length !== 0) {
-                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'] || [])];
-                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'] || [])];
+            if (dataFromTool['hosting history'].length !== 0 && dataFromTool['hosting history'] !== 'Can not load Uptime data') {
+                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'] || null)];
+                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'] || null)];
             }
         }
-
         search_results['token'] = dataFromTool['token'];
         search_results['url'] = dataFromTool['url'];
     return search_results;

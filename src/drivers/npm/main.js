@@ -466,7 +466,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    let dataSend ={
+    let dataSend = {
         url:url,
         domains:domainInfor,
         runtime: calRunTime(time_end, time_begin),
@@ -786,7 +786,7 @@ app.get('/dashboard/element', async (req, res) => {
     if (option === 'number') {
         res.send([...new Set(elementsList)].length.toString());
     } else {
-        res.send(fiveMostCommonElements(elementsList, keyInResult, -1));
+        res.send(fiveMostCommonElements(elementsList, keyInResult, 5));
     }
 })
 
