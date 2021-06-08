@@ -306,7 +306,7 @@ async function processVulnsTable(database, token, action, vulns) {
 }
 
 // Find the most common element in an array
-function fiveMostCommonElements(arrayOfUrls, keyInResult) {
+function fiveMostCommonElements(arrayOfUrls, keyInResult, number) {
     return Object
         .entries(arrayOfUrls
             .reduce((a, v) => {
@@ -315,7 +315,7 @@ function fiveMostCommonElements(arrayOfUrls, keyInResult) {
             }, {})
         )
         .sort((a, b) => { return b[1] - a[1]; })
-        .slice(0, 5)
+        .slice(0, number > -1 ? number : this.length)
         .reduce((a, v) => {
             let obj = {};
             obj[keyInResult] = v[0];
@@ -326,7 +326,7 @@ function fiveMostCommonElements(arrayOfUrls, keyInResult) {
 }
 
 // Find most common elements in array of objects
-function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult) {
+function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult, number) {
     let arr = arrayOfElements.map((element) => { return [element[fieldFilter], element]; });
     let mapArr = new Map(arr);
 
@@ -338,7 +338,7 @@ function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult) {
             }, {})
         )
         .sort((a, b) => { return b[1] - a[1]; })
-        .slice(0, 5)
+        .slice(0, number > -1 ? number : this.length)
         .reduce((a, v) => {
             let obj = {};
             obj[keyInResult] = mapArr.get(v[0]);
