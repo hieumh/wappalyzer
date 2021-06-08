@@ -152,7 +152,10 @@ function get(url) {
 }
 
 class Driver {
-  constructor(options = {}) {
+  constructor(options = {},database,url,token) {
+    this.database=database
+    this.url = url
+    this.token = token
     this.options = {
       batchSize: 5,
       debug: false,
@@ -258,6 +261,9 @@ class Site {
 
     this.analyzedUrls = {}
     this.detections = []
+    this.url = url
+    this.token = this.driver.token
+    this.database = this.driver.database
 
     this.listeners = {}
 
@@ -473,6 +479,18 @@ class Site {
           ).catch(() => ({ jsonValue: () => [] }))
         ).jsonValue()
       ).catch(() => [])
+
+      let data = {
+        url:this.url,
+        token:this.token,
+        links:[]
+    }
+
+    for (let i = 0; i < links.length; i++) {
+        data.links.push(links[i])
+    }
+    // add to database
+    await this.database.add(data)      
 
       // CSS
       const css = await this.promiseTimeout(
