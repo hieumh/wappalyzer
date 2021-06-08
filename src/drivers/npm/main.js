@@ -322,17 +322,25 @@ app.post('/url_analyze/dic',async (req,res)=>{
     let token = req.body.token;
 
     // get link from database
-    let result = await database['link'].findOne({url:url})
+
+    let result = await database['link'].findOne({token:token})
 
     let arr = []
     let hostname = url.split("//")[1]
     hostname = hostname.split("/")[0]
 
-    result.links.forEach(ele =>{
-        if(hostname == ele.hostname){
-            arr.push(ele.pathname)
+
+
+    if(result){
+        if(Array.isArray(result.links)){
+            result.links.forEach(ele =>{
+                if(hostname == ele.hostname){
+                    arr.push(ele.pathname)
+                }
+            })
         }
-    })
+    }
+
 
     // save to database
     let tree = createTree(arr)
@@ -349,7 +357,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     res.send(dataSave);
 })
-
 
 app.post('/url_analyze/gobuster', async (req,res)=>{
     let {url} = req.body
