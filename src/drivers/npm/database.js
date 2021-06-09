@@ -22,102 +22,106 @@ class databaseHandle{
                 url:String,
                 technologies: Array,
                 vulns: Array,
-                programing_language:Array,
-                framework:Array,
+                runtime: String
             },
             'whatweb':{
                 token: String,
                 url:String, 
                 technologies: Array,
                 vulns: Array,
-                programing_language:Array,
-                framework:Array,
+                runtime: String
             },
             'webtech':{
                 token: String,
                 url:String, 
                 technologies: Array,
                 vulns: Array,
-                programing_language:Array,
-                framework:Array,
+                runtime: String
             },
             'whois':{
                 token: String,
                 url:String,
-                domains:Object
+                domains:Object,
+                runtime: String
             },
             'sublist3r':{
                 token: String,
                 url:String,
-                domains:Array
+                domains:Array,
+                runtime: String
             },
             'gobuster':{
                 token: String,
                 url:String,
-                gobuster:Object
+                gobuster:Object,
+                runtime: String
             },
             'dig':{
                 token: String,
                 url:String,
-                dns:String
+                dns:String,
+                runtime: String
             },
             'fierce':{
                 token: String,
                 url:String,
-                dns:String
+                dns:String,
+                runtime: String
             },
             'server':{
                 token: String,
                 url:String,
                 server:Array,
-                vulns: Array
+                vulns: Array,
+                runtime: String
             },
             'netcraft':{
                 token: String,
                 url:String,
                 technologies:Array,
                 vulns: Array,
-                programing_language:Array,
-                framework:Array,
+                runtime: String,
             },
             'largeio':{
                 token: String,
                 url:String,
                 technologies:Array,
                 vulns: Array,
-                programing_language:Array,
-                framework:Array,
             },
             'wafw00f':{
                 token: String,
                 url:String,
-                waf:Array
+                waf:Array,
+                runtime: String
             },
             'wpscan':{
                 token: String,
                 url:String,
                 wp:Array,
-                vulns: Array
+                vulns: Array,
+                runtime: String
             },
             'droopescan':{
                 token: String,
                 url:String,
                 droop:Array,
-                vulns: Array
+                vulns: Array,
+                runtime: String
             },
             'joomscan':{
                 token: String,
                 url:String,
                 joomscan:Array,
-                vulns: Array
+                vulns: Array,
+                runtime: String
             },
             'nikto':{
                 token: String,
                 url:String,
                 nikto:Array,
-                vulns: Array
+                vulns: Array,
+                runtime: String
             },
-
             'vuln': {
                 token: String,
                 vulns: Array
@@ -143,8 +147,6 @@ class databaseHandle{
                 joomscan:Object,
                 nikto:Object,
                 vulns: Object,
-                programing_language:Array,
-                framework:Array,
                 time_create:String,
                 token: String,
                 pic:String

@@ -466,7 +466,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    let dataSend ={
+    let dataSend = {
         url:url,
         domains:domainInfor,
         runtime: calRunTime(time_end, time_begin),
@@ -786,7 +786,7 @@ app.get('/dashboard/element', async (req, res) => {
     if (option === 'number') {
         res.send([...new Set(elementsList)].length.toString());
     } else {
-        res.send(fiveMostCommonElements(elementsList, keyInResult));
+        res.send(fiveMostCommonElements(elementsList, keyInResult, 5));
     }
 })
 
@@ -818,7 +818,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return result;
             }, []);
 
-            res.send(fiveMostCommonElements(arrayOfUrls, 'url'));
+            res.send(fiveMostCommonElements(arrayOfUrls, 'url', 5));
         }
         // If type is vuln
         if (type === 'vuln') {
@@ -826,7 +826,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return resultAllReports.concat(report.vulns);
             }, []);
 
-            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln'));
+            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln', 5));
         }
         // If type is waf
         if (type === 'waf') {
@@ -843,7 +843,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
 
             }, []);
 
-            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf'));
+            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf', 5));
         }
     }
 });
