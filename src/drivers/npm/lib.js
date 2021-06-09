@@ -372,14 +372,22 @@ async function updateReport(database, token, tool, data) {
 }
 
 async function pullTechnologyFile() {
-  try {
-    let results = await axios.get('https://raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
-    let data = results.data;
-    return data;
-
-  } catch (err) {
-    console.log(err);
-  }
+    try {
+        const results = await axios.get('//raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
+        console.log('get here');
+        let remoteData = results.data;
+        if (remoteData && remoteData.technologies && remoteData.categories){
+            return remoteData;
+        } else {
+            throw "Can not get raw file from github";
+        }
+    } catch {
+        try {
+            return JSON.parse(fs.readFileSync('/root/wappalyzer/src/technologies.json', 'utf8'));
+        } catch {
+            return {technologies: [], categories: []};
+        }
+    }
 }
 
 function initializeSearch(url, token) {

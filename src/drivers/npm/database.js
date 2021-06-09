@@ -122,7 +122,6 @@ class databaseHandle{
                 vulns: Array,
                 runtime: String
             },
-
             'vuln': {
                 token: String,
                 vulns: Array
