@@ -39,11 +39,12 @@ async function checkCms(url){
 
 // get dns information
 async function getDnsDig(url){
+    url = decodeURIComponent(url)
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
-    
+    url = encodeURIComponent(url)
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
     return result.body
 }
@@ -61,10 +62,12 @@ async function getDomainSub(url){
 
 // get domain information with whois
 async function getDomainWhoIs(url){
+    url = decodeURIComponent(url)
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
+    url = encodeURIComponent(url)
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whois?url=${url}`)
     return result.body
 }

@@ -101,6 +101,7 @@ app.get("/url_analyze/:tool",async (req,res)=>{
 // test cms technologies
 app.post("/url_analyze/cmseek",async (req,res)=>{
     let {url} = req.body
+    url = decodeURIComponent(url)
 
     try {
         let result = await checkCms(url)
@@ -117,6 +118,9 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
 // analyze technologies for url
 app.post('/url_analyze/wapp',async (req,res)=>{
     let {url} = req.body
+    console.log("before",url)
+    url = decodeURIComponent(url)
+    console.log("after",url)
 
     let token = req.body.token;
     
@@ -318,7 +322,8 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 // analyze directory and file enumeration
 app.post('/url_analyze/dic',async (req,res)=>{
     let {url} = req.body
-
+    url = decodeURIComponent(url)
+    
     let token = req.body.token;
 
     // get link from database
@@ -688,6 +693,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 
 app.get('/analyze_result/screenshot', async (req,res)=>{
     let {url,pic,token} = req.query
+    url = decodeURIComponent(url)
     if (pic){
         res.sendFile(__dirname + '/images/' + pic)
         return
@@ -755,6 +761,7 @@ app.get('/search_database', async (req, res) => {
 
 app.post('/update_vulns_table', async(req, res) => {
     let {token, action, vulns} = req.body;
+    console.log(token, action, vulns)
     await processVulnsTable(database, token, action, vulns);
     
     let vulnTable = await database['report'].findOne({token: token});
