@@ -7,15 +7,8 @@ const axios = require('axios');
 let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostCveApi = "172.17.0.4"
-let portCveApi = "4000"
-
 let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
-
-let programingLanguage = readFile("./alphabet_programing_language/language.txt").split("\n").map(element=>element.trim().toLowerCase())
-
-let framework = readFile("./alphabet_programing_language/framework.txt").split("\n").map(element=>element.trim().toLowerCase())
 
 function getHostFromUrl(url){
     if(url.split('//').length == 2){
@@ -46,11 +39,12 @@ async function checkCms(url){
 
 // get dns information
 async function getDnsDig(url){
+    url = decodeURIComponent(url)
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
-    
+    url = encodeURIComponent(url)
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/dig?url=${url}`)
     return result.body
 }
@@ -68,10 +62,12 @@ async function getDomainSub(url){
 
 // get domain information with whois
 async function getDomainWhoIs(url){
+    url = decodeURIComponent(url)
     url = url.split("//")[1]
     if(url[url.length-1] == "/"){
         url = url.slice(0,-1)
     }
+    url = encodeURIComponent(url)
     let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/whois?url=${url}`)
     return result.body
 }
@@ -306,7 +302,7 @@ async function processVulnsTable(database, token, action, vulns) {
 }
 
 // Find the most common element in an array
-function fiveMostCommonElements(arrayOfUrls, keyInResult) {
+function fiveMostCommonElements(arrayOfUrls, keyInResult, number) {
     return Object
         .entries(arrayOfUrls
             .reduce((a, v) => {
@@ -315,7 +311,7 @@ function fiveMostCommonElements(arrayOfUrls, keyInResult) {
             }, {})
         )
         .sort((a, b) => { return b[1] - a[1]; })
-        .slice(0, 5)
+        .slice(0, number > -1 ? number : this.length)
         .reduce((a, v) => {
             let obj = {};
             obj[keyInResult] = v[0];
@@ -326,7 +322,7 @@ function fiveMostCommonElements(arrayOfUrls, keyInResult) {
 }
 
 // Find most common elements in array of objects
-function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult) {
+function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult, number) {
     let arr = arrayOfElements.map((element) => { return [element[fieldFilter], element]; });
     let mapArr = new Map(arr);
 
@@ -338,7 +334,7 @@ function fiveMostCommonObjects(arrayOfElements, fieldFilter, keyInResult) {
             }, {})
         )
         .sort((a, b) => { return b[1] - a[1]; })
-        .slice(0, 5)
+        .slice(0, number > -1 ? number : this.length)
         .reduce((a, v) => {
             let obj = {};
             obj[keyInResult] = mapArr.get(v[0]);
@@ -379,14 +375,22 @@ async function updateReport(database, token, tool, data) {
 }
 
 async function pullTechnologyFile() {
-  try {
-    let results = await axios.get('https://raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
-    let data = results.data;
-    return data;
-
-  } catch (err) {
-    console.log(err);
-  }
+    try {
+        const results = await axios.get('//raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
+        console.log('get here');
+        let remoteData = results.data;
+        if (remoteData && remoteData.technologies && remoteData.categories){
+            return remoteData;
+        } else {
+            throw "Can not get raw file from github";
+        }
+    } catch {
+        try {
+            return JSON.parse(fs.readFileSync('/root/wappalyzer/src/technologies.json', 'utf8'));
+        } catch {
+            return {technologies: [], categories: []};
+        }
+    }
 }
 
 function initializeSearch(url, token) {
@@ -422,7 +426,9 @@ async function filterDataWapp(dataFromTool) {
 // Filter data for search table
 async function filterDataTool(dataFromTool) {
     let fields = ['url', 'token', 'operatingsystems', 'webservers', 'webframeworks', 'javascriptframeworks', 'cms', 'programminglanguages'];
-    let techData = dataFromTool?.technologies || [];
+    let techData = dataFromTool && 
+        dataFromTool.technologies && 
+        dataFromTool.technologies !== 'a' ? dataFromTool.technologies : [];
 
     let technologiesFile = await pullTechnologyFile();
     let technologies = technologiesFile.technologies;
@@ -449,12 +455,11 @@ async function filterDataTool(dataFromTool) {
         }), {})
 
         if (Object.keys(dataFromTool).includes('hosting history')) {
-            if (dataFromTool['hosting history'].length !== 0) {
-                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'] || [])];
-                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'] || [])];
+            if (dataFromTool['hosting history'].length !== 0 && dataFromTool['hosting history'] !== 'Can not load Uptime data') {
+                search_results['webservers'] = [...(search_results['webservers'] || []), (dataFromTool['hosting history'][0]['web server'] || null)];
+                search_results['operatingsystems'] = [...(search_results['operatingsystems'] || []), (dataFromTool['hosting history'][0]['os'] || null)];
             }
         }
-
         search_results['token'] = dataFromTool['token'];
         search_results['url'] = dataFromTool['url'];
     return search_results;

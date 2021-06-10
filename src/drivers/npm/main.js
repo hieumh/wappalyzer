@@ -101,6 +101,7 @@ app.get("/url_analyze/:tool",async (req,res)=>{
 // test cms technologies
 app.post("/url_analyze/cmseek",async (req,res)=>{
     let {url} = req.body
+    url = decodeURIComponent(url)
 
     try {
         let result = await checkCms(url)
@@ -117,6 +118,9 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
 // analyze technologies for url
 app.post('/url_analyze/wapp',async (req,res)=>{
     let {url} = req.body
+    console.log("before",url)
+    url = decodeURIComponent(url)
+    console.log("after",url)
 
     let token = req.body.token;
     
@@ -318,21 +322,30 @@ app.post('/url_analyze/webtech', async (req,res)=>{
 // analyze directory and file enumeration
 app.post('/url_analyze/dic',async (req,res)=>{
     let {url} = req.body
-
+    url = decodeURIComponent(url)
+    
     let token = req.body.token;
 
     // get link from database
-    let result = await database['link'].findOne({url:url})
+
+    let result = await database['link'].findOne({token:token})
 
     let arr = []
     let hostname = url.split("//")[1]
     hostname = hostname.split("/")[0]
 
-    result.links.forEach(ele =>{
-        if(hostname == ele.hostname){
-            arr.push(ele.pathname)
+
+
+    if(result){
+        if(Array.isArray(result.links)){
+            result.links.forEach(ele =>{
+                if(hostname == ele.hostname){
+                    arr.push(ele.pathname)
+                }
+            })
         }
-    })
+    }
+
 
     // save to database
     let tree = createTree(arr)
@@ -349,7 +362,6 @@ app.post('/url_analyze/dic',async (req,res)=>{
 
     res.send(dataSave);
 })
-
 
 app.post('/url_analyze/gobuster', async (req,res)=>{
     let {url} = req.body
@@ -459,7 +471,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
         }
     }
 
-    let dataSend ={
+    let dataSend = {
         url:url,
         domains:domainInfor,
         runtime: calRunTime(time_end, time_begin),
@@ -681,6 +693,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 
 app.get('/analyze_result/screenshot', async (req,res)=>{
     let {url,pic,token} = req.query
+    url = decodeURIComponent(url)
     if (pic){
         res.sendFile(__dirname + '/images/' + pic)
         return
@@ -748,6 +761,7 @@ app.get('/search_database', async (req, res) => {
 
 app.post('/update_vulns_table', async(req, res) => {
     let {token, action, vulns} = req.body;
+    console.log(token, action, vulns)
     await processVulnsTable(database, token, action, vulns);
     
     let vulnTable = await database['report'].findOne({token: token});
@@ -779,7 +793,7 @@ app.get('/dashboard/element', async (req, res) => {
     if (option === 'number') {
         res.send([...new Set(elementsList)].length.toString());
     } else {
-        res.send(fiveMostCommonElements(elementsList, keyInResult));
+        res.send(fiveMostCommonElements(elementsList, keyInResult, 5));
     }
 })
 
@@ -811,7 +825,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return result;
             }, []);
 
-            res.send(fiveMostCommonElements(arrayOfUrls, 'url'));
+            res.send(fiveMostCommonElements(arrayOfUrls, 'url', 5));
         }
         // If type is vuln
         if (type === 'vuln') {
@@ -819,7 +833,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
                 return resultAllReports.concat(report.vulns);
             }, []);
 
-            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln'));
+            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln', 5));
         }
         // If type is waf
         if (type === 'waf') {
@@ -836,7 +850,7 @@ app.get('/dashboard/get_five_most_common', async (req, res) => {
 
             }, []);
 
-            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf'));
+            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf', 5));
         }
     }
 });
