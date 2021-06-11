@@ -81,7 +81,7 @@ const { getVulnsFromExploitDB } = require('./lib')
 
 async function startWep(database, url, token, _options) {
   const wappalyzer = new Wappalyzer(_options,database['link'],url,token)
-
+  
   try {
     await wappalyzer.init()
 
