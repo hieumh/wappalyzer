@@ -353,7 +353,7 @@ class Site {
 
     this.pages.push(page)
 
-    page.setDefaultTimeout(this.options.maxWait)
+    page.setDefaultTimeout(0)
 
     await page.setRequestInterception(true)
 
@@ -453,7 +453,7 @@ class Site {
 
     try {
       await this.promiseTimeout(
-        page.goto(url.href, { waitUntil: 'domcontentloaded' })
+        page.goto(url.href, { waitUntil: 'domcontentloaded',timeout:0 })
       )
 
       await sleep(1000)
