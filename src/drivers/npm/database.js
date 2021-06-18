@@ -97,21 +97,21 @@ class databaseHandle{
             'wpscan':{
                 token: String,
                 url:String,
-                wp:Array,
+                wp:Object,
                 vulns: Array,
                 runtime: String
             },
             'droopescan':{
                 token: String,
                 url:String,
-                droop:Array,
+                droop:Object,
                 vulns: Array,
                 runtime: String
             },
             'joomscan':{
                 token: String,
                 url:String,
-                joomscan:Array,
+                joomscan:String,
                 vulns: Array,
                 runtime: String
             },
