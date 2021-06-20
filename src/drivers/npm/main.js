@@ -705,13 +705,14 @@ app.get('/analyze_result/screenshot', async (req,res)=>{
     let {url,pic,token} = req.query
     url = decodeURIComponent(url)
     if (pic){
-        res.sendFile(__dirname + '/images/' + pic)
+        res.sendFile(__dirname + '/images/' + pic);
         return
     }
     
-    let picName = await takeScreenshot(url)
-    await database['report'].updateDocument({token: token}, {pic:picName.split('/').pop() });
-    res.sendFile( __dirname + '/'+ picName);
+    let picName = await takeScreenshot(url, token);
+    await database['report'].updateDocument({token: token}, {pic: token + '.png' });
+    res.sendFile(__dirname + picName);
+
 })
 
 ////////////////////////////////////////////////////

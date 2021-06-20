@@ -3,6 +3,8 @@ const { technologies } = require('./wappalyzer')
 const fs = require('fs')
 const puppeteer = require('puppeteer')
 const axios = require('axios');
+const fetch = require('node-fetch');
+const { response } = require('express');
 
 let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
@@ -17,19 +19,13 @@ function getHostFromUrl(url){
     return url.split('.')[0]
 }
 
-async function takeScreenshot(url){
-    const browser = await puppeteer.launch( {args: ['--no-sandbox'], timeout: 10000,})
-    const page = await browser.newPage()
-    const options = {
-        path:'images/'+getHostFromUrl(url)+".png",
-        fullPage:true,
-        omitBackground:true
-    }
-
-    await page.goto(url)
-    await page.screenshot(options)
-    await browser.close()
-    return options.path
+async function takeScreenshot(url, token){
+    let picName = '/images/' + token + '.png';
+    let picPath = __dirname + picName;
+    const response = await fetch(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/screenshot?url=${url}&token=${token}`)
+    const buffer = await response.buffer();
+    fs.writeFileSync(picPath, buffer);
+    return picName
 }
 
 async function checkCms(url){
