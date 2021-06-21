@@ -106,6 +106,7 @@ app.get("/initialize", async (req, res) => {
 app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
     let {token} = req.query
+    console.log("get",tool,token)
 
     let result = await database['report'].findOne({token:token})
     res.send(result[tool])
@@ -526,7 +527,7 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
 
 /////////////////////////////////////////////////////
 // server information (using nmap information)
-app.post('/url_analyze/server', async (req,res)=>{
+app.post('/url_analyze/nmap', async (req,res)=>{
     let {url} =  req.body
 
     let token = req.body.token;
@@ -543,7 +544,7 @@ app.post('/url_analyze/server', async (req,res)=>{
 
     let dataSend = {
         url: res.locals.decodeUrl,
-        server:serverInfor['nmap'],
+        nmap:serverInfor['nmap'],
         runtime: calRunTime(time_end, time_begin),
         token: token,
         vulns: serverInfor?.vulns || []
@@ -553,7 +554,7 @@ app.post('/url_analyze/server', async (req,res)=>{
     await processVulnsTable(database, token, 'add', serverInfor['vulns']);
 
     // Update server to report table
-    await database['report'].updateDocument({token: token}, {server: dataSend});
+    await database['report'].updateDocument({token: token}, {nmap: dataSend});
 
     res.send(serverInfor)
 })
@@ -621,7 +622,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     // Update wpscan to report table
     await database['report'].updateDocument({token: token}, {wpscan: dataSend});
 
-    res.send(wp)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/droopescan', async (req,res)=>{
@@ -648,7 +649,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     // Update droopescan to report table
     await database['report'].updateDocument({token: token}, {droopescan: dataSend});
 
-    res.send(droope)
+    res.send(dataSend)
 
 
 })
@@ -676,7 +677,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     // Update joomscan to report table
     await database['report'].updateDocument({token: token}, {joomscan: dataSend});
 
-    res.send(joomscan)
+    res.send(dataSend)
 })
 
 app.post('/url_analyze/nikto', async (req,res)=>{

@@ -68,10 +68,10 @@ class databaseHandle{
                 dns:String,
                 runtime: String
             },
-            'server':{
+            'nmap':{
                 token: String,
                 url:String,
-                server:Array,
+                nmap:Array,
                 vulns: Array,
                 runtime: String
             },
@@ -133,7 +133,7 @@ class databaseHandle{
                 dig:Object,
                 fierce:Object,
                 gobuster:Object,
-                server:Object,
+                nmap:Object,
                 netcraft:Object,
                 largeio:Object,
                 wapp:Object,
