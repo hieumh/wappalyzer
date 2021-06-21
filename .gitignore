@@ -15,4 +15,4 @@ tags
 tags.*
 .idea
 /nbproject/private/
-/src/drivers/npm/images/*
+# /src/drivers/npm/images/*
