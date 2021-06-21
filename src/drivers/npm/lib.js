@@ -512,14 +512,14 @@ async function updateSearchTable(database, searchData) {
 
 }
 
-function calRunTime(end, begin) {
-    diffTime = new Date(end - begin);
-    const hour = diffTime.getHours();
-    const minute = diffTime.getMinutes();
-    const second = diffTime.getSeconds();
+// function calRunTime(end, begin) {
+//     diffTime = new Date(end - begin);
+//     const hour = diffTime.getHours();
+//     const minute = diffTime.getMinutes();
+//     const second = diffTime.getSeconds();
 
-    return String(hour) + 'h' + String(minute) + 'p' + String(second) + 's';
-}
+//     return String(hour) + 'h' + String(minute) + 'p' + String(second) + 's';
+// }
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
@@ -537,7 +537,7 @@ module.exports.filterDataTool = filterDataTool
 module.exports.filterDataWapp = filterDataWapp
 module.exports.searchInReportTable = searchInReportTable
 module.exports.searchInSearchTable = searchInSearchTable
-module.exports.calRunTime = calRunTime
+// module.exports.calRunTime = calRunTime
 
 module.exports.search = search
 module.exports.treeParse = treeParse

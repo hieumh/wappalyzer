@@ -35,8 +35,7 @@ const {
     searchInSearchTable,
     initializeReport,
     updateReport,
-    takeScreenshot,
-    calRunTime
+    takeScreenshot
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -139,7 +138,7 @@ app.post('/url_analyze/wapp',async (req,res)=>{
     // Wait for analyze successfully    
     let report = await startWep(database,url, token)
     const time_end = new Date();
-    report['runtime'] = calRunTime(time_end, time_begin);
+    report['runtime'] = (time_end.getTime() - time_begin.getTime()) +'ms';
 
     // Update search table
     const searchResult = await filterDataWapp(report);
@@ -174,7 +173,7 @@ app.post('/url_analyze/netcraft', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         technologies:dataRecv.technologies,
-        runtime: calRunTime(time_end, time_begin)
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms'
     }
 
     dataSend['token'] = token;
@@ -218,7 +217,7 @@ app.post('/url_analyze/largeio', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         technologies:tech,
-        runtime: calRunTime(time_end, time_begin)
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms'
     }
 
     dataSend['token'] = token
@@ -262,7 +261,7 @@ app.post('/url_analyze/whatweb', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         technologies:tech,
-        runtime: calRunTime(time_end, time_begin)
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms'
     }
 
     dataSend['token'] = token
@@ -306,7 +305,7 @@ app.post('/url_analyze/webtech', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         technologies:tech,
-        runtime: calRunTime(time_end, time_begin)
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms'
     }
     
     dataSend['token'] = token
@@ -395,7 +394,7 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         gobuster:dataRecv,
-        runtime: calRunTime(time_begin, time_end),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token
     }
     // Update gobuster to report table
@@ -422,7 +421,7 @@ app.post('/url_analyze/dig',async (req,res)=>{
         dataSend = {
             url: res.locals.decodeUrl,
             dns:dnsInfor,
-            runtime: calRunTime(time_end, time_begin),
+            runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
             token: token
         }
         // Update dig to report table
@@ -445,7 +444,7 @@ app.post('/url_analyze/fierce', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         dns:dnsInfor,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token
     }
     // Update fierce to report table
@@ -485,7 +484,7 @@ app.post('/url_analyze/whois', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         domains:domainInfor,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token
     }
     // Update whois to report table
@@ -512,7 +511,7 @@ app.post('/url_analyze/sublist3r', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         domains:domainInfor.subdomains,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token
     }
     // Update sublist3r to report table
@@ -545,7 +544,7 @@ app.post('/url_analyze/nmap', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         nmap:serverInfor['nmap'],
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token,
         vulns: serverInfor?.vulns || []
     }
@@ -583,7 +582,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         waf:detectWaf.wafs,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token
     };
     // Update wafw00f to report table
@@ -611,7 +610,7 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         wp:wp,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token,
         vulns: wp?.vulns || []
     }
@@ -637,7 +636,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         droope:droope,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token,
         vulns: droope?.vulns || []
     };
@@ -666,7 +665,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         joomscan:joomscan,
-        runtime: calRunTime(time_begin, time_end),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token,
         vulns: joomscan?.vulns || []
     }
@@ -691,7 +690,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
     let dataSend = {
         url: res.locals.decodeUrl,
         nikto:nikto,
-        runtime: calRunTime(time_end, time_begin),
+        runtime: (time_end.getTime() - time_begin.getTime()) +'ms',
         token: token,
         vulns: nikto?.vulnerabilities || []
     }
