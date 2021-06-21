@@ -1,15 +1,12 @@
 const request = require('async-request')
-const { technologies } = require('./wappalyzer')
 const fs = require('fs')
-const puppeteer = require('puppeteer')
 const axios = require('axios');
 const fetch = require('node-fetch');
-const { response } = require('express');
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "database"
 let portDatabase ="27017"
 
-let hostServerApi = "172.17.0.3"
+let hostServerApi = "api-server"
 let portServerApi = "5000"
 
 function getHostFromUrl(url){

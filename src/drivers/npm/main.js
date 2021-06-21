@@ -589,7 +589,7 @@ app.post('/url_analyze/wafw00f', async (req,res)=>{
     // Update wafw00f to report table
     await database['report'].updateDocument({token: token}, {wafw00f: dataSend});
 
-    res.send(detectWaf)
+    res.send(dataSend)
 })
 ///////////////////////////////////////////////////
 
