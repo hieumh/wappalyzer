@@ -117,6 +117,7 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
 
     try {
         let result = await checkCms(url)
+        console.log("check cms :",result)
         result = JSON.parse(result)
         res.send(result)
     } catch(err){
@@ -606,6 +607,12 @@ app.post('/url_analyze/wpscan', async (req,res)=>{
     const time_begin = new Date();
     let wp = await wpScan(url, token)
     const time_end = new Date();
+    try {
+        wp = JSON.parse(wp)
+    } catch(err){
+        wp = {}
+        console.error(err)
+    }
 
     let dataSend = {
         url: res.locals.decodeUrl,
@@ -632,6 +639,12 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     const time_begin = new Date();
     let droope = await droopScan(url)
     const time_end = new Date();
+    try {
+        droope = JSON.parse(droope)
+    } catch(err){
+        droope = {}
+        console.error(err)
+    }
 
     let dataSend = {
         url: res.locals.decodeUrl,
@@ -661,6 +674,12 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     const time_begin = new Date();
     let joomscan = await joomScan(url)
     const time_end = new Date();
+    try {
+        joomscan = JSON.parse(joomscan)
+    } catch(err){
+        joomscan = {joomscan:""}
+        console.error(err)
+    }
 
     let dataSend = {
         url: res.locals.decodeUrl,
