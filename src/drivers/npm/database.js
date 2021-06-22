@@ -152,7 +152,7 @@ class databaseHandle{
                 pic:String
             },
             'search' : { 
-                url: String,
+                url: Array,
                 token: String,
                 operatingsystems: Array,
                 webservers: Array,
@@ -252,7 +252,7 @@ class databaseHandle{
     }
 
     async elementMatch(field, condition) {
-        return await await this.modelTable.find({}).elemMatch(field, condition);
+        return await this.modelTable.find({}).elemMatch(field, condition);
     }
 
     async delete(target){

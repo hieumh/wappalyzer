@@ -3,10 +3,10 @@ const fs = require('fs')
 const axios = require('axios');
 const fetch = require('node-fetch');
 
-let hostDatabase = "database"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostServerApi = "api-server"
+let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
 
 function getHostFromUrl(url){
@@ -391,7 +391,7 @@ function initializeSearch(url, token) {
   let newSearch = fields.reduce((target, field) => {
       return target[field] = [];
   }, {});
-  newSearch['url'] = url;
+  newSearch['url'] = [url];
   newSearch['token'] = token;
   return newSearch;
 }
@@ -463,7 +463,7 @@ async function searchInSearchTable(database, pattern) {
     const regex = new RegExp(pattern, 'gi');
   
     let results = await Promise.all(fields
-      .filter(field => field !== 'url' && field !== 'token')
+      .filter(field => field !== 'token')
       .map(async (field) => {
         const resultFromSearch = await database['search'].elementMatch(field, {$regex: regex});
         return resultFromSearch;
