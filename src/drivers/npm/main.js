@@ -105,7 +105,6 @@ app.get("/initialize", async (req, res) => {
 app.get("/url_analyze/:tool",async (req,res)=>{
     let {tool} = req.params
     let {token} = req.query
-    console.log("get",tool,token)
 
     let result = await database['report'].findOne({token:token})
     res.send(result[tool])
@@ -117,7 +116,6 @@ app.post("/url_analyze/cmseek",async (req,res)=>{
 
     try {
         let result = await checkCms(url)
-        console.log("check cms :",result)
         result = JSON.parse(result)
         res.send(result)
     } catch(err){
@@ -539,7 +537,7 @@ app.post('/url_analyze/nmap', async (req,res)=>{
     try{
         serverInfor = JSON.parse(serverInfor);
     } catch(error) {
-        console.log(error);
+        console.error(error);
     }
 
     let dataSend = {

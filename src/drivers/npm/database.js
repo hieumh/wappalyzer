@@ -181,26 +181,25 @@ class databaseHandle{
             this.createSchema()
             this.createModel()
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     connect(){
         // connect to database
         this.db = mongoose.connect(`mongodb://${hostDatabase}:${portDatabase}/wappalyzer`, {auto_reconnect: true, poolSize: 5, useNewUrlParser: true, useUnifiedTopology: true }).catch(error=>{
-            console.log(error)
+            console.error(error)
         })
-        //console.log("[*] connection successfully")
     }
     disconnect(){
         mongoose.connection.close(()=>{
-            console.log("[*] close")
+            console.error("[*] close")
         })
     }
     createSchema(){
         try{
             this.mapSchema[this.table] = new Schema(this.schema)
         } catch(error){
-            console.log("Error:",error)
+            console.error("Error:",error)
         }
     }
     createModel(){
@@ -208,7 +207,7 @@ class databaseHandle{
         try {
             this.modelTable = mongoose.model(this.table, this.mapSchema[this.table])
         } catch (error){
-            console.log(error)
+            console.error(error)
         }
     }
     checkExist(target){
@@ -230,7 +229,7 @@ class databaseHandle{
                 let check = await result.save()
                 return check
             } catch(err){
-                console.log(err.stack)
+                console.error(err.stack)
             }
 
         }
@@ -259,10 +258,9 @@ class databaseHandle{
         // delete one function
         await this.modelTable.deleteOne(target, (err)=>{
             if (err) {
-                console.log(err)
+                console.error(err)
                 return
             }
-            console.log("[*] delete successfully")
         })
     }
 }

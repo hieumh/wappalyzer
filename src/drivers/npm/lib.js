@@ -3,10 +3,10 @@ const fs = require('fs')
 const axios = require('axios');
 const fetch = require('node-fetch');
 
-let hostDatabase = "172.17.0.2"
+let hostDatabase = "database"
 let portDatabase ="27017"
 
-let hostServerApi = "172.17.0.3"
+let hostServerApi = "api-server"
 let portServerApi = "5000"
 
 function getHostFromUrl(url){
@@ -370,7 +370,6 @@ async function updateReport(database, token, tool, data) {
 async function pullTechnologyFile() {
     try {
         const results = await axios.get('//raw.githubusercontent.com/AliasIO/wappalyzer/master/src/technologies.json');
-        console.log('get here');
         let remoteData = results.data;
         if (remoteData && remoteData.technologies && remoteData.categories){
             return remoteData;
