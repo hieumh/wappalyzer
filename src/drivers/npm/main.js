@@ -23,19 +23,21 @@ const {
     joomScan,
     niktoScan,
     checkCms,
+    takeScreenshot,
+    updateReport,
+    updateSearchTable,
     deleteDuplicate,
     processVulnsTable,
-    fiveMostCommonElements,
-    fiveMostCommonObjects,
     initializeSearch,
-    updateSearchTable,
+    initializeReport,
     filterDataTool,
     filterDataWapp,
     searchInReportTable,
     searchInSearchTable,
-    initializeReport,
-    updateReport,
-    takeScreenshot
+    getNumAndRatio,
+    numberOfReport,
+    numberOfVuln,
+    topFiveElement
 } = require('./lib')
 const netcraft = require("./tools/netcrafts/netcraft")
 const largeio = require("./tools/largeio/largeio")
@@ -794,91 +796,42 @@ app.post('/update_vulns_table', async(req, res) => {
     res.send({vulns: vulnTable.vulns});
 });
 
-app.get('/dashboard/num_report', async (req,res)=>{
-    let listReport = await database['report'].getTable({})
-    res.send(listReport.length.toString())
-})
+app.get('/dashboard', async (req, res) => {
+    let dataOfDashboard = {};
 
-app.get('/dashboard/element', async (req, res) => {
-    const {type, option} = req.query;
-    const fieldFilter = type === 'language' ? 'programminglanguages' : 'webframeworks';
-    const keyInResult = type === 'language' ? 'programing_language' : 'framework';
+    // Number and ratio of programming languages
+    const lang = await getNumAndRatio(database, 'language');
+    dataOfDashboard['number_of_lang'] = lang[0];
+    dataOfDashboard['lang_ratio'] = lang[1]
 
-    const searchData = await database['search'].getTable({});
+    // Number and ratio of web frameworks
+    const frame = await getNumAndRatio(database, 'framework');
+    dataOfDashboard['number_of_frame'] = frame[0];
+    dataOfDashboard['frame_ratio'] = frame[1];
 
-    let elementsList = searchData
-        .map((item) => {
-            let elements = item[fieldFilter].map((language) => language.split('/')[0]);
-            return [...new Set(elements)]
-        })
-        .reduce((result, searchRecord) => ([
-            ...result, ...searchRecord
-        ]), [])
+    // Number of report
+    const numberReport = await numberOfReport(database);
+    dataOfDashboard['number_of_report'] = numberReport;
+
+    // Number of vuln
+    const numberVuln = await numberOfVuln(database);
+    dataOfDashboard['number_of_vuln'] = numberVuln;
+
+    // 5 top url
+    const topUrl = await topFiveElement('url', database);
+    dataOfDashboard['top_url'] = topUrl;
+
+    // 5 top waf
+    const topWaf = await topFiveElement('waf', database);
+    dataOfDashboard['top_waf'] = topWaf;
+
+    // 5 top vuln
+    const topVuln = await topFiveElement('vuln', database);
+    dataOfDashboard['top_vuln'] = topVuln;
     
-    if (option === 'number') {
-        res.send([...new Set(elementsList)].length.toString());
-    } else {
-        res.send(fiveMostCommonElements(elementsList, keyInResult, 5));
-    }
+    res.send(dataOfDashboard);
+
 })
-
-app.get('/dashboard/num_vuln', async (req, res) => {
-    let arrayOfReports = await database['report'].getTable({});
-
-    let arrayOfVulns = arrayOfReports.reduce((result, report) => {
-        return result.concat(report.vulns);
-    }, []);
-
-    arrayOfVulns = deleteDuplicate('Title', arrayOfVulns);
-    
-    res.send(arrayOfVulns.length.toString());
-});
-
-app.get('/dashboard/get_five_most_common', async (req, res) => {
-    // Get the most common of url or vuln ?
-    let {type} = req.query;
-    // Get all reports from database
-    let arrayOfReports = await database['report'].getTable({});
-    // Check if reports array is empty
-    if (arrayOfReports.length === 0){
-        res.send([]);
-    } else {
-        // If type is url
-        if (type === 'url') {
-            let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
-                result.push(report.url);
-                return result;
-            }, []);
-
-            res.send(fiveMostCommonElements(arrayOfUrls, 'url', 5));
-        }
-        // If type is vuln
-        if (type === 'vuln') {
-           let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
-                return resultAllReports.concat(report.vulns);
-            }, []);
-
-            res.send(fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln', 5));
-        }
-        // If type is waf
-        if (type === 'waf') {
-            let listWafsEachReport = [];
-            let arrayOfWafs = arrayOfReports.reduce((result, report) => {
-                listWafsEachReport = (report.wafw00f?.waf || []).reduce((a, v) => {
-                    if (v.firewall !== 'None'){
-                        a.push(v);
-                    }
-                    return a;
-                },[]);
-
-                return (result.concat(listWafsEachReport));
-
-            }, []);
-
-            res.send(fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf', 5));
-        }
-    }
-});
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000")

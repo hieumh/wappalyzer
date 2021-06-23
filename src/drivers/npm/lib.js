@@ -511,14 +511,87 @@ async function updateSearchTable(database, searchData) {
 
 }
 
-// function calRunTime(end, begin) {
-//     diffTime = new Date(end - begin);
-//     const hour = diffTime.getHours();
-//     const minute = diffTime.getMinutes();
-//     const second = diffTime.getSeconds();
+async function getNumAndRatio(database, type) {
+    const fieldFilter = type === 'language' ? 'programminglanguages' : 'webframeworks';
+    const keyInResult = type === 'language' ? 'programing_language' : 'framework';
 
-//     return String(hour) + 'h' + String(minute) + 'p' + String(second) + 's';
-// }
+    const searchData = await database['search'].getTable({});
+
+    let elementsList = searchData
+        .map((item) => {
+            let elements = item[fieldFilter].map((language) => language.split('/')[0]);
+            return [...new Set(elements)]
+        })
+        .reduce((result, searchRecord) => ([
+            ...result, ...searchRecord
+        ]), [])
+    
+    const num = [...new Set(elementsList)].length.toString();
+    const ratio = fiveMostCommonElements(elementsList, keyInResult, 5);
+
+    return [num, ratio];
+}
+
+async function numberOfReport (database) {
+    let listReport = await database['report'].getTable({})
+    return listReport.length.toString();
+}
+
+async function numberOfVuln(database) {
+    let arrayOfReports = await database['report'].getTable({});
+
+    let arrayOfVulns = arrayOfReports.reduce((result, report) => {
+        return result.concat(report.vulns);
+    }, []);
+
+    arrayOfVulns = deleteDuplicate('Title', arrayOfVulns);
+    
+    return arrayOfVulns.length.toString();
+}
+
+async function topFiveElement(type, database) {
+    // Get all reports from database
+    let arrayOfReports = await database['report'].getTable({});
+    // Check if reports array is empty
+    if (arrayOfReports.length === 0){
+        return [];
+    } else {
+        // If type is url
+        if (type === 'url') {
+            let arrayOfUrls = arrayOfReports.reduce((result, report) => { 
+                result.push(report.url);
+                return result;
+            }, []);
+
+            return fiveMostCommonElements(arrayOfUrls, 'url', 5);
+        }
+        // If type is vuln
+        if (type === 'vuln') {
+           let arrayOfVulns = arrayOfReports.reduce((resultAllReports, report) => {
+                return resultAllReports.concat(report.vulns);
+            }, []);
+
+            return fiveMostCommonObjects(arrayOfVulns, 'Title', 'vuln', 5);
+        }
+        // If type is waf
+        if (type === 'waf') {
+            let listWafsEachReport = [];
+            let arrayOfWafs = arrayOfReports.reduce((result, report) => {
+                listWafsEachReport = (report.wafw00f?.waf || []).reduce((a, v) => {
+                    if (v.firewall !== 'None'){
+                        a.push(v);
+                    }
+                    return a;
+                },[]);
+
+                return (result.concat(listWafsEachReport));
+
+            }, []);
+
+            return fiveMostCommonObjects(arrayOfWafs, 'firewall', 'waf', 5);
+        }
+    }
+}
 
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
@@ -527,9 +600,6 @@ module.exports.deleteDuplicate = deleteDuplicate
 module.exports.processVulnsTable = processVulnsTable
 module.exports.initializeReport = initializeReport
 module.exports.updateReport = updateReport
-module.exports.fiveMostCommonElements = fiveMostCommonElements
-module.exports.fiveMostCommonObjects = fiveMostCommonObjects
-module.exports.pullTechnologyFile = pullTechnologyFile
 module.exports.initializeSearch = initializeSearch
 module.exports.updateSearchTable = updateSearchTable
 module.exports.filterDataTool = filterDataTool
@@ -561,6 +631,11 @@ module.exports.checkCms = checkCms
 module.exports.readFile = readFile
 module.exports.takeScreenshot = takeScreenshot
 module.exports.getHostFromUrl = getHostFromUrl
+
+module.exports.getNumAndRatio = getNumAndRatio
+module.exports.numberOfReport = numberOfReport
+module.exports.numberOfVuln = numberOfVuln
+module.exports.topFiveElement = topFiveElement
 
 module.exports.hostDatabase = hostDatabase
 module.exports.portDatabase = portDatabase
