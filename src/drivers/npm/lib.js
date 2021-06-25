@@ -25,8 +25,8 @@ async function takeScreenshot(url, token){
     return picName
 }
 
-async function checkCms(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/cmseek?url=${url}`)
+async function checkCms(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/cmseek?url=${url}&token=${token}`)
     return result.body
 }
 
@@ -66,8 +66,8 @@ async function getDomainWhoIs(url){
 }
 
 // get file and folder with gobuster
-async function getDicGobuster(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/gobuster?url=${url}`)
+async function getDicGobuster(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/gobuster?url=${url}&token=${token}`)
     return result.body
 }
 
@@ -101,13 +101,13 @@ async function wpScan(url, token){
     return result.body
 }
 
-async function joomScan(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/joomscan?url=${url}`)
+async function joomScan(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/joomscan?url=${url}&token=${token}`)
     return result.body
 }
 
-async function droopScan(url){
-    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/droopescan?url=${url}`)
+async function droopScan(url, token){
+    let result = await request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/droopescan?url=${url}&token=${token}`)
     return result.body
 }
 
@@ -593,6 +593,10 @@ async function topFiveElement(type, database) {
     }
 }
 
+function stopAllTools(token) {
+    result = request(`http://${hostServerApi}:${portServerApi}/api/v1/enumeration/stop_all_tools?token=${token}`)
+}
+
 module.exports = addCve
 module.exports.getVulnsFromExploitDB = getVulnsFromExploitDB
 module.exports.getVulnsForNetcraft = getVulnsForNetcraft
@@ -606,6 +610,7 @@ module.exports.filterDataTool = filterDataTool
 module.exports.filterDataWapp = filterDataWapp
 module.exports.searchInReportTable = searchInReportTable
 module.exports.searchInSearchTable = searchInSearchTable
+module.exports.stopAllTools = stopAllTools
 // module.exports.calRunTime = calRunTime
 
 module.exports.search = search

@@ -24,6 +24,7 @@ const {
     niktoScan,
     checkCms,
     takeScreenshot,
+    stopAllTools,
     updateReport,
     updateSearchTable,
     deleteDuplicate,
@@ -114,10 +115,10 @@ app.get("/url_analyze/:tool",async (req,res)=>{
 
 // test cms technologies
 app.post("/url_analyze/cmseek",async (req,res)=>{
-    let {url} = req.body
+    let {url, token} = req.body
 
     try {
-        let result = await checkCms(url)
+        let result = await checkCms(url, token)
         result = JSON.parse(result)
         res.send(result)
     } catch(err){
@@ -379,8 +380,13 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 
     let token = req.body.token;
 
+    res.on('close', (err) => {
+        if (token)
+            stopAllTools(token);
+    })
+
     const time_begin = new Date();
-    let dataRecv = await getDicGobuster(url)
+    let dataRecv = await getDicGobuster(url, token)
     const time_end = new Date();
 
     if (dataRecv == "Wrong URL"){
@@ -412,7 +418,7 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
 // analyze dns information 
 app.post('/url_analyze/dig',async (req,res)=>{
     let {url,token} = req.body
-
+    
     const time_begin = new Date();
     let dnsInfor = await getDnsDig(url)
     const time_end = new Date();
@@ -637,7 +643,7 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     let token = req.body.token;
 
     const time_begin = new Date();
-    let droope = await droopScan(url)
+    let droope = await droopScan(url, token)
     const time_end = new Date();
     try {
         droope = JSON.parse(droope)
@@ -662,8 +668,6 @@ app.post('/url_analyze/droopescan', async (req,res)=>{
     await database['report'].updateDocument({token: token}, {droopescan: dataSend});
 
     res.send(dataSend)
-
-
 })
 
 app.post('/url_analyze/joomscan', async (req,res)=>{
@@ -672,7 +676,7 @@ app.post('/url_analyze/joomscan', async (req,res)=>{
     let token = req.body.token;
 
     const time_begin = new Date();
-    let joomscan = await joomScan(url)
+    let joomscan = await joomScan(url, token)
     const time_end = new Date();
     try {
         joomscan = JSON.parse(joomscan)
