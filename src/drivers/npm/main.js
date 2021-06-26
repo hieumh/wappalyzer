@@ -51,7 +51,17 @@ database['link'] = new databaseHandle('link')
 database['report'] = new databaseHandle('report')
 database['search'] = new databaseHandle('search')
 
-const app = express()    
+const http = require('http');
+const app = express();
+const server = http.createServer(app);
+const { Server } = require('socket.io')
+const io = new Server(server, {
+    cors: {
+      origin: "http://localhost:3001",
+      methods: ["GET", "POST"]
+    }
+  });
+
 app.use(bodyParser.json({limit:'50mb'}))
 app.use(bodyParser.urlencoded({
     extended:false,
@@ -379,11 +389,6 @@ app.post('/url_analyze/gobuster', async (req,res)=>{
     let {url} = req.body
 
     let token = req.body.token;
-
-    res.on('close', (err) => {
-        if (token)
-            stopAllTools(token);
-    })
 
     const time_begin = new Date();
     let dataRecv = await getDicGobuster(url, token)
@@ -837,7 +842,19 @@ app.get('/dashboard', async (req, res) => {
 
 })
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000")
-})
+// app.listen(3000, () => {
+//     console.log("Server is running on port 3000")
+// })
+
+io.on('connection', (socket) => {
+    socket.on('token', (token) => {
+        socket.on('disconnect', (reason) => {
+            stopAllTools(token);
+        });
+    })
+});
+
+server.listen(3000, () => {
+    console.log("Server is listening on port 3000");
+});
 
