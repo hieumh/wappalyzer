@@ -3,10 +3,10 @@ const fs = require('fs')
 const axios = require('axios');
 const fetch = require('node-fetch');
 
-let hostDatabase = "database"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostServerApi = "api-server"
+let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
 
 function getHostFromUrl(url){
@@ -226,7 +226,7 @@ function handleLink(str){
 function treeParse(path_str,index=0,path={}){
     // intial value at the first time
     if (path[path_str[index]]==undefined){
-        path[path_str[index]] = JSON.stringify({})
+        path[path_str[index]] = {}
     }
     let object = path
 
@@ -235,13 +235,16 @@ function treeParse(path_str,index=0,path={}){
         if (index+1 >= path_str.length){
             return object
         }
-        // intial object or assign value
-        if (path[path_str[index]][path_str[index+1]]==undefined){
-            path[path_str[index]][path_str[index+1]] = JSON.stringify({})
+        // intial object or assign 
+        let obj = path 
+
+
+        if (obj[path_str[index]][path_str[index+1]]==undefined){
+            obj[path_str[index]][path_str[index+1]] = {}
         } 
     
         index += 1
-        return _treeParse(path_str,index,path[path_str[index-1]]) 
+        return _treeParse(path_str,index,obj[path_str[index-1]]) 
     }
 
     return _treeParse(path_str,0,path)
@@ -251,10 +254,12 @@ function treeParse(path_str,index=0,path={}){
 function createTree(arr){
     let str
     let obj = {}
+
     for (let i of arr){
         str = handleLink(i)
         obj = treeParse(str,0,obj)
     }
+    console.log(obj)
     return obj
 }
 
