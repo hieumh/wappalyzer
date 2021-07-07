@@ -259,7 +259,6 @@ function createTree(arr){
         str = handleLink(i)
         obj = treeParse(str,0,obj)
     }
-    console.log(obj)
     return obj
 }
 
