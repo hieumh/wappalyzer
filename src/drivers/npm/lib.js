@@ -3,10 +3,10 @@ const fs = require('fs')
 const axios = require('axios');
 const fetch = require('node-fetch');
 
-let hostDatabase = "database"
+let hostDatabase = "172.17.0.2"
 let portDatabase ="27017"
 
-let hostServerApi = "api-server"
+let hostServerApi = "172.17.0.3"
 let portServerApi = "5000"
 
 function getHostFromUrl(url){
@@ -531,8 +531,15 @@ async function getNumAndRatio(database, type) {
         ]), [])
     
     const num = [...new Set(elementsList)].length.toString();
-    const ratio = fiveMostCommonElements(elementsList, keyInResult, 5);
-
+    let ratio = fiveMostCommonElements(elementsList, keyInResult, -1);
+    if (ratio.length > 5){
+        let restRatio = 0
+        for (let i = 5 ; i < ratio.length ; i++){
+            restRatio += ratio[i].count
+        }
+        ratio = ratio.slice(0,5)
+        ratio.push({programing_language:'the rest languages', count:restRatio})
+    }
     return [num, ratio];
 }
 
