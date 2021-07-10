@@ -731,7 +731,7 @@ app.post('/url_analyze/nikto', async (req,res)=>{
 
 app.get('/analyze_result/screenshot', async (req,res)=>{
     let {url,pic,token} = req.query
-    url = decodeURIComponent(url)
+    url = encodeURIComponent(url)
     if (pic){
         res.sendFile(__dirname + '/images/' + pic);
         return
